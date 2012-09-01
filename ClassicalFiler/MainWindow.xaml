@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="ClassicalFilter" Height="350" Width="525" Initialized="Window_Initialized">
     <Grid>
-        <DataGrid Name="dataGrid" AutoGenerateColumns="False">
+        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" />
                 <DataGridTextColumn Header="更新日時" Binding="{Binding LastWriteTime}" />
