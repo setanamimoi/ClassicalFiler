@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using ClassicalFiler;
 using NUnit.Framework;
 
-namespace _Tests._IOPath
+namespace _Tests._PathInfo
 {
     [TestFixture]
     public class LastWriteTime
@@ -13,19 +13,19 @@ namespace _Tests._IOPath
         {
             Assert.AreEqual(
                 new FileInfo(Application.StartupPath).LastWriteTime,
-                new IOPath(Application.StartupPath).LastWriteTime);
+                new PathInfo(Application.StartupPath).LastWriteTime);
         }
         [Test]
         public void ファイルの最終更新日を取得する()
         {
             Assert.AreEqual(
                 new FileInfo(Application.ExecutablePath).LastWriteTime,
-                new IOPath(Application.ExecutablePath).LastWriteTime);
+                new PathInfo(Application.ExecutablePath).LastWriteTime);
         }
         [Test]
         public void 存在しないファイルはnullを取得する()
         {
-            Assert.AreEqual(null, new IOPath(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).LastWriteTime);
+            Assert.AreEqual(null, new PathInfo(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).LastWriteTime);
         }
     }
 }

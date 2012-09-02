@@ -18,7 +18,7 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            this.dataGrid.ItemsSource = new IOPath(@"C:\").Children;
+            this.dataGrid.ItemsSource = new PathInfo(@"C:\").GetChildren();
         }
     }
 }

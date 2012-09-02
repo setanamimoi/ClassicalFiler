@@ -3,7 +3,7 @@ using System.Windows.Forms;
 using ClassicalFiler;
 using NUnit.Framework;
 
-namespace _Tests._IOPath
+namespace _Tests._PathInfo
 {
     [TestFixture]
     public class Type
@@ -11,21 +11,21 @@ namespace _Tests._IOPath
         [Test]
         public void ディレクトリはDirectoryを取得する()
         {
-            Assert.AreEqual(IOPath.IOPathType.Directory,
-                new IOPath(Application.StartupPath).Type);
+            Assert.AreEqual(PathInfo.PathType.Directory,
+                new PathInfo(Application.StartupPath).Type);
         }
         [Test]
         public void ファイルはFileを取得する()
         {
             Assert.AreEqual(
-                IOPath.IOPathType.File,
-                new IOPath(Application.ExecutablePath).Type);
+                PathInfo.PathType.File,
+                new PathInfo(Application.ExecutablePath).Type);
         }
         [Test]
         public void 存在しないファイルはUnExistsを取得する()
         {
-            Assert.AreEqual(IOPath.IOPathType.UnExists,
-                new IOPath(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).Type);
+            Assert.AreEqual(PathInfo.PathType.UnExists,
+                new PathInfo(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).Type);
         }
     }
 }

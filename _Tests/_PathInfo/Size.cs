@@ -3,28 +3,28 @@ using System.Windows.Forms;
 using ClassicalFiler;
 using NUnit.Framework;
 
-namespace _Tests._IOPath
+namespace _Tests._PathInfo
 {
     [TestFixture]
-    public class Length
+    public class Size
     {
         [Test]
         public void ディレクトリはnullを取得する()
         {
             Assert.AreEqual(null,
-                new IOPath(Application.StartupPath).Length);
+                new PathInfo(Application.StartupPath).Size);
         }
         [Test]
         public void ファイルはファイルサイズを取得する()
         {
             Assert.AreEqual(
                 new FileInfo(Application.ExecutablePath).Length,
-                new IOPath(Application.ExecutablePath).Length);
+                new PathInfo(Application.ExecutablePath).Size);
         }
         [Test]
         public void 存在しないファイルはnullを取得する()
         {
-            Assert.AreEqual(null, new IOPath(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).Length);
+            Assert.AreEqual(null, new PathInfo(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).Size);
         }
     }
 }

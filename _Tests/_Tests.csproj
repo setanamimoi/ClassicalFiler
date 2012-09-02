@@ -54,13 +54,13 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
-    <Compile Include="_IOPath\Children.cs" />
-    <Compile Include="_IOPath\Extention.cs" />
-    <Compile Include="_IOPath\FullPath.cs" />
-    <Compile Include="_IOPath\LastWriteTime.cs" />
-    <Compile Include="_IOPath\Length.cs" />
-    <Compile Include="_IOPath\Name.cs" />
-    <Compile Include="_IOPath\Type.cs" />
+    <Compile Include="_PathInfo\GetChildren.cs" />
+    <Compile Include="_PathInfo\Extention.cs" />
+    <Compile Include="_PathInfo\FullPath.cs" />
+    <Compile Include="_PathInfo\LastWriteTime.cs" />
+    <Compile Include="_PathInfo\Size.cs" />
+    <Compile Include="_PathInfo\Name.cs" />
+    <Compile Include="_PathInfo\Type.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClassicalFiler\ClassicalFiler.csproj">

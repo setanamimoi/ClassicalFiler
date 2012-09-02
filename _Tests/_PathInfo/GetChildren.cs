@@ -3,22 +3,22 @@ using System.Windows.Forms;
 using ClassicalFiler;
 using NUnit.Framework;
 
-namespace _Tests._IOPath
+namespace _Tests._PathInfo
 {
     [TestFixture]
-    public class Children
+    public class GetChildren
     {
         [Test]
         public void ファイルは要素０の配列を取得する()
         {
-            Assert.AreEqual(new IOPath[]{},
-                new IOPath(Application.ExecutablePath).Children);
+            Assert.AreEqual(new PathInfo[]{},
+                new PathInfo(Application.ExecutablePath).GetChildren());
         }
 
         [Test]
         public void ディレクトリの中の要素を取得する()
         {
-            IOPath[] actual = new IOPath(Application.StartupPath).Children;
+            PathInfo[] actual = new PathInfo(Application.StartupPath).GetChildren();
 
             Assert.AreEqual("framework", actual[0].Name);
             Assert.AreEqual("lib", actual[1].Name);
@@ -57,8 +57,8 @@ namespace _Tests._IOPath
         [Test]
         public void 存在しないファイルは要素０の配列を取得する()
         {
-            Assert.AreEqual(new IOPath[]{},
-                new IOPath(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).Children);
+            Assert.AreEqual(new PathInfo[]{},
+                new PathInfo(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).GetChildren());
         }
     }
 }

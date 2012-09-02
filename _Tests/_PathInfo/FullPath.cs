@@ -2,7 +2,7 @@
 using ClassicalFiler;
 using NUnit.Framework;
 
-namespace _Tests._IOPath
+namespace _Tests._PathInfo
 {
     [TestFixture]
     public class FullPath
@@ -10,14 +10,14 @@ namespace _Tests._IOPath
         [Test]
         public void フルパスが取得できる()
         {
-            Assert.AreEqual(Directory.GetCurrentDirectory(), new IOPath(@".\").FullPath);
+            Assert.AreEqual(Directory.GetCurrentDirectory(), new PathInfo(@".\").FullPath);
         }
         [Test]
         public void 存在しないファイルでも想定されるフルパスが取得できる()
         {
             Assert.AreEqual(
                 Path.Combine(Directory.GetCurrentDirectory(), "存在しないファイル.txt"),
-                new IOPath(@".\存在しないファイル.txt").FullPath);
+                new PathInfo(@".\存在しないファイル.txt").FullPath);
         }
     }
 }
