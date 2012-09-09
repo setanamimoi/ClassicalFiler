@@ -8,9 +8,14 @@ namespace _Tests._PathInfo
     public class FullPath
     {
         [Test]
-        public void フルパスが取得できる()
+        public void ルートドライブ以外の場合サフィックスにセパレータが削除される()
         {
-            Assert.AreEqual(Directory.GetCurrentDirectory(), new PathInfo(@".\").FullPath);
+            Assert.AreEqual(Directory.GetCurrentDirectory().TrimEnd('\\'), new PathInfo(new FileInfo(@".\").FullName + @"\\").FullPath);
+        }
+        [Test]
+        public void ルートドライブの場合サフィックスにセパレータが追加される()
+        {
+            Assert.AreEqual(@"C:\", new PathInfo(@"C:\").FullPath);
         }
         [Test]
         public void 存在しないファイルでも想定されるフルパスが取得できる()
