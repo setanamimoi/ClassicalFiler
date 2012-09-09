@@ -22,14 +22,29 @@ namespace ClassicalFiler
         /// <param name="path">ファイルパス</param>
         public PathInfo(string path)
         {
-            string trimedPath = Path.GetFullPath(path).TrimEnd('\\');
-            if (trimedPath.Last() == ':')
+            FileInfo fileInfo = new FileInfo(path);
+
+            if (IsRootDrive(fileInfo) == true)
             {
                 this.FullPath = path;
                 return;
             }
 
-            this.FullPath = trimedPath;
+            this.FullPath = fileInfo.FullName.TrimEnd('\\');
+        }
+
+        /// <summary>
+        /// 指定したファイル情報がルートドライブかどうかを取得します。
+        /// </summary>
+        /// <param name="fileInfo">ファイル情報</param>
+        /// <returns>ルートドライブであれば true 、そうでなければ false 。</returns>
+        private static bool IsRootDrive(FileInfo fileInfo)
+        {
+            if (fileInfo.FullName.TrimEnd('\\').Last() == ':')
+            {
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
