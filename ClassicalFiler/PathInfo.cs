@@ -103,7 +103,7 @@ namespace ClassicalFiler
             {
                 if (this.Type == PathType.File)
                 {
-                    return System.IO.Path.GetExtension(this.FullPath);
+                    return Path.GetExtension(this.FullPath);
                 }
                 return null;
             }
