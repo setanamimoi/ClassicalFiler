@@ -84,7 +84,7 @@
     </Compile>
     <Compile Include="FileSizeConverter.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />
-    <Compile Include="IOPath.cs" />
+    <Compile Include="PathInfo.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
