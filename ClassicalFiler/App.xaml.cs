@@ -24,7 +24,8 @@ namespace ClassicalFiler
             MessageBox.Show(
                 string.Join(
                     Environment.NewLine, "想定外のエラーが発生しました。", exception.Message),
-                    "ClassicalFiler", MessageBoxButton.OK, MessageBoxImage.Error);
+                    System.Windows.Forms.Application.ProductName,
+                    MessageBoxButton.OK, MessageBoxImage.Error);
 
             Environment.Exit(-1);
         }
