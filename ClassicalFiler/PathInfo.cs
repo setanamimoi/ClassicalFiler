@@ -163,6 +163,17 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// 属性情報を取得します。
+        /// </summary>
+        public FileAttributes Attributes
+        {
+            get
+            {
+                return new FileInfo(this.FullPath).Attributes;
+            }
+        }
+
+        /// <summary>
         /// パスの種別を定義した列挙体です。
         /// </summary>
         public enum PathType

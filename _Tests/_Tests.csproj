@@ -57,6 +57,7 @@
     <Compile Include="_PathInfo\GetChildren.cs" />
     <Compile Include="_PathInfo\Extention.cs" />
     <Compile Include="_PathInfo\FullPath.cs" />
+    <Compile Include="_PathInfo\Attributes.cs" />
     <Compile Include="_PathInfo\LastWriteTime.cs" />
     <Compile Include="_PathInfo\Size.cs" />
     <Compile Include="_PathInfo\Name.cs" />

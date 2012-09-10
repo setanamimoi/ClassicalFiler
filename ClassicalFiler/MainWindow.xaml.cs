@@ -5,6 +5,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Linq;
 using System.Windows.Controls;
+using System.IO;
 
 namespace ClassicalFiler
 {
@@ -36,6 +37,20 @@ namespace ClassicalFiler
                     return;
                 }
 
+                if (selectedPath.Type != PathInfo.PathType.Directory)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if ((selectedPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                {
+                    MessageBox.Show(
+                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", selectedPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                    e.Handled = true;
+                    return;
+                }
+                
                 this.dataGrid_OpenDirectory(selectedPath);
             }
         }
@@ -46,6 +61,7 @@ namespace ClassicalFiler
             this.dataGrid.Focus();
             
             object firstItem = this.dataGrid.Items.Cast<object>().First();
+
             this.dataGrid.CurrentCell = new DataGridCellInfo(firstItem, this.dataGrid.Columns.First());
         }
     }
