@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Linq;
-using System.Windows.Controls;
 using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace ClassicalFiler
 {
@@ -19,16 +17,36 @@ namespace ClassicalFiler
             InitializeComponent();
         }
 
+        /// <summary>
+        /// 現在のディレクトリを取得・設定する。
+        /// </summary>
+        private PathInfo CurrentDirectory
+        {
+            get;
+            set;
+        }
+
         private void Window_Initialized(object sender, EventArgs e)
         {
-            PathInfo pathInfo = new PathInfo(@"C:\");
-
-            this.dataGrid_OpenDirectory(pathInfo);
+            this.OpenDirectory(new PathInfo(@"C:\"));
         }
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
+            if (Keyboard.IsKeyDown(Key.Left) == true)
+            {
+                PathInfo selectPath = this.CurrentDirectory;
+
+                DirectoryInfo parentDirectory = new FileInfo(this.CurrentDirectory.FullPath).Directory;
+
+                if (parentDirectory == null)
+                {
+                    return;
+                }
+
+                this.OpenDirectory(new PathInfo(parentDirectory.FullName), selectPath);
+            }
+            else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
                 PathInfo selectedPath = this.dataGrid.SelectedItem as PathInfo;
 
@@ -50,19 +68,61 @@ namespace ClassicalFiler
                     e.Handled = true;
                     return;
                 }
-                
-                this.dataGrid_OpenDirectory(selectedPath);
+
+                this.OpenDirectory(selectedPath);
             }
         }
 
-        private void dataGrid_OpenDirectory(PathInfo pathInfo)
+        /// <summary>
+        /// 指定したディレクトリを開き、一番上のパスを選択します。
+        /// </summary>
+        /// <param name="openDirectory">参照するディレクトリ</param>
+        private void OpenDirectory(PathInfo openDirectory)
         {
-            this.dataGrid.ItemsSource = pathInfo.GetChildren();
-            this.dataGrid.Focus();
-            
-            object firstItem = this.dataGrid.Items.Cast<object>().First();
+            OpenDirectory(openDirectory, null);
+        }
 
-            this.dataGrid.CurrentCell = new DataGridCellInfo(firstItem, this.dataGrid.Columns.First());
+        /// <summary>
+        /// 指定したディレクトリを開き、指定したパスを選択します。
+        /// </summary>
+        /// <param name="openDirectory">参照するディレクトリ</param>
+        /// <param name="selectPath">ディレクトリ内で選択するパス</param>
+        /// <remarks>
+        /// ディレクトリ内で選択するパスが null の場合、一番上のパスを選択します。
+        /// </remarks>
+        private void OpenDirectory(PathInfo openDirectory, PathInfo selectPath)
+        {
+            this.CurrentDirectory = openDirectory;
+
+            this.dataGrid.ItemsSource = openDirectory.GetChildren();
+            this.dataGrid.Focus();
+
+            object firstItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
+
+            if (firstItem == null)
+            {
+                return;
+            }
+
+            if (selectPath == null)
+            {
+                dataGrid.SelectedItem = firstItem;
+            }
+            else
+            {
+                foreach (PathInfo p in this.dataGrid.Items)
+                {
+                    if (p.FullPath != selectPath.FullPath)
+                    {
+                        continue;
+                    }
+
+                    dataGrid.SelectedItem = p;
+                    break;
+                }
+            }
+
+            dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
         }
     }
 }
