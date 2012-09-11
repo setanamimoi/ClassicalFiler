@@ -37,39 +37,39 @@ namespace ClassicalFiler
             {
                 PathInfo selectPath = this.CurrentDirectory;
 
-                DirectoryInfo parentDirectory = new FileInfo(this.CurrentDirectory.FullPath).Directory;
+                PathInfo nextDirectory = this.CurrentDirectory.ParentDirectory;
 
-                if (parentDirectory == null)
+                if (nextDirectory == null)
                 {
                     return;
                 }
 
-                this.OpenDirectory(new PathInfo(parentDirectory.FullName), selectPath);
+                this.OpenDirectory(nextDirectory, selectPath);
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
-                PathInfo selectedPath = this.dataGrid.SelectedItem as PathInfo;
+                PathInfo nextPath = this.dataGrid.SelectedItem as PathInfo;
 
-                if (selectedPath == null)
+                if (nextPath == null)
                 {
                     return;
                 }
 
-                if (selectedPath.Type != PathInfo.PathType.Directory)
+                if (nextPath.Type != PathInfo.PathType.Directory)
                 {
                     e.Handled = true;
                     return;
                 }
 
-                if ((selectedPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
                 {
                     MessageBox.Show(
-                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", selectedPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
                     e.Handled = true;
                     return;
                 }
 
-                this.OpenDirectory(selectedPath);
+                this.OpenDirectory(nextPath);
             }
         }
 

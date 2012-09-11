@@ -48,6 +48,24 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// 親ディレクトリを取得します。
+        /// </summary>
+        /// <remarks>現在ディレクトリがルートドライブの場合 親ディレクトリのインスタンスは null となります。</remarks>
+        public PathInfo ParentDirectory
+        {
+            get
+            {
+                FileInfo fileInfo = new FileInfo(this.FullPath);
+
+                if (IsRootDrive(fileInfo) == true)
+                {
+                    return null;
+                }
+                return new PathInfo(fileInfo.Directory.FullName);
+            }
+        }
+
+        /// <summary>
         /// 子要素を取得します。
         /// </summary>
         /// <returns>パスに関連する子要素の配列。</returns>
