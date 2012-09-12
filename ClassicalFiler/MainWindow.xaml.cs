@@ -106,20 +106,11 @@ namespace ClassicalFiler
 
             if (selectPath == null)
             {
-                dataGrid.SelectedItem = firstItem;
+                this.dataGrid.SelectedItem = firstItem;
             }
             else
             {
-                foreach (PathInfo p in this.dataGrid.Items)
-                {
-                    if (p.FullPath != selectPath.FullPath)
-                    {
-                        continue;
-                    }
-
-                    dataGrid.SelectedItem = p;
-                    break;
-                }
+                this.dataGrid.SelectedItem = selectPath;
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
