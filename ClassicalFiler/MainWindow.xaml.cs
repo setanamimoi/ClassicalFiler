@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace ClassicalFiler
 {
@@ -14,13 +15,14 @@ namespace ClassicalFiler
     {
         public MainWindow()
         {
+            this.DirectoryHistory = new ChainList<DirectoryState>();
             InitializeComponent();
         }
 
         /// <summary>
-        /// 現在のディレクトリを取得・設定する。
+        /// ディレクトリの履歴を取得・設定します。
         /// </summary>
-        private PathInfo CurrentDirectory
+        private ChainList<DirectoryState> DirectoryHistory
         {
             get;
             set;
@@ -28,23 +30,44 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            this.OpenDirectory(new PathInfo(@"C:\"));
+            DirectoryState directoryState = new DirectoryState();
+            directoryState.Directory = new PathInfo(@"C:\");
+
+            this.DirectoryHistory.Push(directoryState);
+            this.OpenDirectory();
         }
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.Left) == true)
+            //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
+            if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                PathInfo selectPath = this.CurrentDirectory;
+                this.DirectoryHistory.Current.SelectPath  = this.DirectoryHistory.Current.Directory;
+                if (this.DirectoryHistory.MovePrevious() == false)
+                {
+                    return;
+                }
+                this.OpenDirectory();
+            }
+            else if (Keyboard.IsKeyDown(Key.Left) == true)
+            {
+                PathInfo selectPath = this.DirectoryHistory.Current.Directory;
 
-                PathInfo nextDirectory = this.CurrentDirectory.ParentDirectory;
+                PathInfo nextDirectory = this.DirectoryHistory.Current.Directory.ParentDirectory;
 
                 if (nextDirectory == null)
                 {
                     return;
                 }
 
-                this.OpenDirectory(nextDirectory, selectPath);
+                this.DirectoryHistory.Current.SelectPath = selectPath;
+
+                DirectoryState directoryState = new DirectoryState();
+                directoryState.Directory = nextDirectory;
+                directoryState.SelectPath = selectPath;
+
+                this.DirectoryHistory.Push(directoryState);
+                this.OpenDirectory();
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
@@ -69,32 +92,24 @@ namespace ClassicalFiler
                     return;
                 }
 
-                this.OpenDirectory(nextPath);
+                this.DirectoryHistory.Current.SelectPath = nextPath;
+
+                DirectoryState directoryState = new DirectoryState();
+                directoryState.Directory = nextPath;
+
+                this.DirectoryHistory.Push(directoryState);
+                this.OpenDirectory();
             }
         }
 
         /// <summary>
-        /// 指定したディレクトリを開き、一番上のパスを選択します。
+        /// カレントディレクトリを開き、一番上のパスを選択します。
         /// </summary>
-        /// <param name="openDirectory">参照するディレクトリ</param>
-        private void OpenDirectory(PathInfo openDirectory)
+        private void OpenDirectory()
         {
-            OpenDirectory(openDirectory, null);
-        }
+            PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
-        /// <summary>
-        /// 指定したディレクトリを開き、指定したパスを選択します。
-        /// </summary>
-        /// <param name="openDirectory">参照するディレクトリ</param>
-        /// <param name="selectPath">ディレクトリ内で選択するパス</param>
-        /// <remarks>
-        /// ディレクトリ内で選択するパスが null の場合、一番上のパスを選択します。
-        /// </remarks>
-        private void OpenDirectory(PathInfo openDirectory, PathInfo selectPath)
-        {
-            this.CurrentDirectory = openDirectory;
-
-            this.dataGrid.ItemsSource = openDirectory.GetChildren();
+            this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
             this.dataGrid.Focus();
 
             object firstItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
