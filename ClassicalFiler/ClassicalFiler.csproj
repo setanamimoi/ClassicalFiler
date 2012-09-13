@@ -85,6 +85,7 @@
     </Compile>
     <Compile Include="ChainItem.cs" />
     <Compile Include="ChainList.cs" />
+    <Compile Include="DirectoryState.cs" />
     <Compile Include="FileSizeConverter.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />
     <Compile Include="PathInfo.cs" />

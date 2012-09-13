@@ -17,6 +17,11 @@ namespace ClassicalFiler
         {
             get
             {
+                if (this.CurrentItem == null)
+                {
+                    return default(T);
+                }
+
                 return this.CurrentItem.CurrentItem;
             }
         }
@@ -33,8 +38,13 @@ namespace ClassicalFiler
 
             this.CurrentItem = next;
         }
+
         public bool MovePrevious()
         {
+            if (this.CurrentItem == null)
+            {
+                return false;
+            }
             if (this.CurrentItem.PreviousItem == null)
             {
                 return false;
