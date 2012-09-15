@@ -54,7 +54,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="_ChainList\MovePrevious.cs" />
-    <Compile Include="_ChainList\Push.cs" />
+    <Compile Include="_ChainList\Add.cs" />
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
     <Compile Include="_PathInfo\Equals.cs" />
     <Compile Include="_PathInfo\GetChildren.cs" />

@@ -15,14 +15,14 @@ namespace ClassicalFiler
     {
         public MainWindow()
         {
-            this.DirectoryHistory = new ChainList<DirectoryState>();
+            this.DirectoryHistory = new ChainList<DirectorySelectState>();
             InitializeComponent();
         }
 
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
-        private ChainList<DirectoryState> DirectoryHistory
+        private ChainList<DirectorySelectState> DirectoryHistory
         {
             get;
             set;
@@ -30,10 +30,10 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            DirectoryState directoryState = new DirectoryState();
-            directoryState.Directory = new PathInfo(@"C:\");
+            DirectorySelectState directoryState = 
+                new DirectorySelectState(new PathInfo(@"C:\"));
 
-            this.DirectoryHistory.Push(directoryState);
+            this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
         }
 
@@ -62,11 +62,10 @@ namespace ClassicalFiler
 
                 this.DirectoryHistory.Current.SelectPath = selectPath;
 
-                DirectoryState directoryState = new DirectoryState();
-                directoryState.Directory = nextDirectory;
-                directoryState.SelectPath = selectPath;
+                DirectorySelectState directoryState = 
+                    new DirectorySelectState(nextDirectory, selectPath);
 
-                this.DirectoryHistory.Push(directoryState);
+                this.DirectoryHistory.Add(directoryState);
                 this.OpenDirectory();
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
@@ -94,10 +93,10 @@ namespace ClassicalFiler
 
                 this.DirectoryHistory.Current.SelectPath = nextPath;
 
-                DirectoryState directoryState = new DirectoryState();
-                directoryState.Directory = nextPath;
+                DirectorySelectState directoryState = 
+                    new DirectorySelectState(nextPath);
 
-                this.DirectoryHistory.Push(directoryState);
+                this.DirectoryHistory.Add(directoryState);
                 this.OpenDirectory();
             }
         }

@@ -1,58 +1,115 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
+﻿
 namespace ClassicalFiler
 {
+    /// <summary>
+    /// 前の項目と後の項目の参照を保持する連鎖リストです。
+    /// </summary>
+    /// <typeparam name="T">管理する項目の型。</typeparam>
     public class ChainList<T>
     {
-        private ChainItem<T> CurrentItem
+        /// <summary>
+        /// 現在の連鎖項目を取得・設定します。
+        /// </summary>
+        private ChainItem<T> CurrentChainItem
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// 現在の項目を取得します。
+        /// </summary>
         public T Current
         {
             get
             {
-                if (this.CurrentItem == null)
+                if (this.CurrentChainItem == null)
                 {
                     return default(T);
                 }
 
-                return this.CurrentItem.CurrentItem;
+                return this.CurrentChainItem.CurrentItem;
             }
         }
 
-        public void Push(T pushItem)
+        /// <summary>
+        /// 項目を新しく追加します。
+        /// </summary>
+        /// <param name="addItem">連鎖リストに追加する項目。</param>
+        public void Add(T addItem)
         {
-            ChainItem<T> next = new ChainItem<T>(pushItem);
+            ChainItem<T> next = new ChainItem<T>(addItem);
 
-            if (this.CurrentItem != null)
+            if (this.CurrentChainItem != null)
             {
-                this.CurrentItem.NextItem = next;
+                this.CurrentChainItem.Next = next;
             }
-            next.PreviousItem = this.CurrentItem;
+            next.Previous = this.CurrentChainItem;
 
-            this.CurrentItem = next;
+            this.CurrentChainItem = next;
         }
 
+        /// <summary>
+        /// 連鎖リストの前の項目に移動します。
+        /// </summary>
+        /// <returns>移動できた場合 true 、そうでなければ false 。</returns>
         public bool MovePrevious()
         {
-            if (this.CurrentItem == null)
+            if (this.CurrentChainItem == null)
             {
                 return false;
             }
-            if (this.CurrentItem.PreviousItem == null)
+            if (this.CurrentChainItem.Previous == null)
             {
                 return false;
             }
 
-            this.CurrentItem = this.CurrentItem.PreviousItem;
+            this.CurrentChainItem = this.CurrentChainItem.Previous;
 
             return true;
+        }
+
+        /// <summary>
+        /// ChainList クラスで使用する 連鎖項目です。
+        /// </summary>
+        /// <typeparam name="ChainT">連鎖項目の型</typeparam>
+        internal class ChainItem<ChainT>
+        {
+            /// <summary>
+            /// ChainItem クラスの新しいインスタンスを初期化します。
+            /// </summary>
+            /// <param name="current"></param>
+            internal ChainItem(ChainT current)
+            {
+                this.CurrentItem = current;
+            }
+
+            /// <summary>
+            /// 現在の連鎖項目を取得・設定します。
+            /// </summary>
+            internal ChainT CurrentItem
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// 次の連鎖項目を取得・設定します。
+            /// </summary>
+            internal ChainItem<ChainT> Next
+            {
+                get;
+                set;
+            }
+
+            /// <summary>
+            /// 前の連鎖項目を取得・設定します。
+            /// </summary>
+            internal ChainItem<ChainT> Previous
+            {
+                get;
+                set;
+            }
         }
     }
 }

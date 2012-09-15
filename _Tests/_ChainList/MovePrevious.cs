@@ -18,8 +18,8 @@ namespace _Tests._ChainList
         public void 前回プッシュされた値が取得できる()
         {
             ChainList<PathInfo> list = new ChainList<PathInfo>();
-            list.Push(new PathInfo(@"C:\"));
-            list.Push(new PathInfo(@"C:\AA"));
+            list.Add(new PathInfo(@"C:\"));
+            list.Add(new PathInfo(@"C:\AA"));
 
             list.MovePrevious();
 
@@ -30,8 +30,8 @@ namespace _Tests._ChainList
         public void 戻るべきオブジェクトがある場合trueを取得する()
         {
             ChainList<PathInfo> list = new ChainList<PathInfo>();
-            list.Push(new PathInfo(@"C:\"));
-            list.Push(new PathInfo(@"C:\AA"));
+            list.Add(new PathInfo(@"C:\"));
+            list.Add(new PathInfo(@"C:\AA"));
 
             Assert.IsTrue(list.MovePrevious());
         }
@@ -40,8 +40,8 @@ namespace _Tests._ChainList
         public void 戻るべきオブジェクトがない場合falseを取得する()
         {
             ChainList<PathInfo> list = new ChainList<PathInfo>();
-            list.Push(new PathInfo(@"C:\"));
-            list.Push(new PathInfo(@"C:\AA"));
+            list.Add(new PathInfo(@"C:\"));
+            list.Add(new PathInfo(@"C:\AA"));
 
             list.MovePrevious();
             Assert.IsFalse(list.MovePrevious());
@@ -51,11 +51,11 @@ namespace _Tests._ChainList
         public void 一度戻った後にプッシュした場合戻る前のオブジェクトの参照は削除される()
         {
             ChainList<PathInfo> list = new ChainList<PathInfo>();
-            list.Push(new PathInfo(@"C:\"));
-            list.Push(new PathInfo(@"C:\AA"));
+            list.Add(new PathInfo(@"C:\"));
+            list.Add(new PathInfo(@"C:\AA"));
 
             list.MovePrevious();
-            list.Push(new PathInfo(@"C:\BB"));
+            list.Add(new PathInfo(@"C:\BB"));
 
             list.MovePrevious();
 
