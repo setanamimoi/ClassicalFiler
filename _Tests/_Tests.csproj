@@ -53,11 +53,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="_ChainList\MovePrevious.cs" />
+    <Compile Include="_ChainList\Add.cs" />
+    <Compile Include="_ChainList\MoveNext.cs" />
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
+    <Compile Include="_PathInfo\Equals.cs" />
     <Compile Include="_PathInfo\GetChildren.cs" />
     <Compile Include="_PathInfo\Extention.cs" />
     <Compile Include="_PathInfo\FullPath.cs" />
+    <Compile Include="_PathInfo\Attributes.cs" />
+    <Compile Include="_PathInfo\GetHashCode.cs" />
     <Compile Include="_PathInfo\LastWriteTime.cs" />
+    <Compile Include="_PathInfo\ParentDirectory.cs" />
     <Compile Include="_PathInfo\Size.cs" />
     <Compile Include="_PathInfo\Name.cs" />
     <Compile Include="_PathInfo\Type.cs" />

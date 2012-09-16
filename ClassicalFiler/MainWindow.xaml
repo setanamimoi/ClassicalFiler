@@ -7,7 +7,7 @@
         <Root:FileSizeConverter x:Key="FileSizeConverter" />
     </Window.Resources>
     <Grid>
-        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None">
+        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="True" />
                 <DataGridTextColumn Header="更新日時" Binding="{Binding LastWriteTime, StringFormat=yyyy/MM/dd HH:mm:ss}" IsReadOnly="True" />

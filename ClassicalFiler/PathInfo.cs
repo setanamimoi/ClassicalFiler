@@ -24,23 +24,24 @@ namespace ClassicalFiler
         {
             FileInfo fileInfo = new FileInfo(path);
 
-            if (IsRootDrive(fileInfo) == true)
+            string fullPath = fileInfo.FullName;
+            if (IsRootDrive(fullPath) == true)
             {
-                this.FullPath = path;
+                this.FullPath = fullPath;
                 return;
             }
 
-            this.FullPath = fileInfo.FullName.TrimEnd('\\');
+            this.FullPath = fullPath.TrimEnd('\\');
         }
 
         /// <summary>
-        /// 指定したファイル情報がルートドライブかどうかを取得します。
+        /// 指定したフルパスがルートドライブかどうかを取得します。
         /// </summary>
-        /// <param name="fileInfo">ファイル情報</param>
+        /// <param name="fileInfo">ファイルのフルパス</param>
         /// <returns>ルートドライブであれば true 、そうでなければ false 。</returns>
-        private static bool IsRootDrive(FileInfo fileInfo)
+        private static bool IsRootDrive(string fullpath)
         {
-            if (fileInfo.FullName.TrimEnd('\\').Last() == ':')
+            if (fullpath.TrimEnd('\\').Last() == ':')
             {
                 return true;
             }
@@ -71,6 +72,56 @@ namespace ClassicalFiler
             }
 
             return ret.ToArray();
+        }
+
+        /// <summary>
+        /// 指定した PathInfo が、現在の PathInfo と等しいかどうかを判断します。
+        /// </summary>
+        /// <param name="obj">現在の PathInfo と比較する PathInfo 。</param>
+        /// <returns>指定した PathInfo が現在の PathInfo と等しい場合は true。それ以外の場合は false。</returns>
+        public override bool Equals(object obj)
+        {
+            PathInfo compare = obj as PathInfo;
+
+            if (compare == null)
+            {
+                return false;
+            }
+
+            if (this.GetHashCode() == compare.GetHashCode())
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// ハッシュ コード を取得します。
+        /// </summary>
+        /// <returns>現在の PathInfo のハッシュ コード。</returns>
+        /// <remarks>同じファイルパスであれば 同じハッシュコードを取得します。</remarks>
+        public override int GetHashCode()
+        {
+            return this.FullPath.ToUpper().GetHashCode();
+        }
+
+        /// <summary>
+        /// 親ディレクトリを取得します。
+        /// </summary>
+        /// <remarks>現在ディレクトリがルートドライブの場合 親ディレクトリのインスタンスは null となります。</remarks>
+        public PathInfo ParentDirectory
+        {
+            get
+            {
+                FileInfo fileInfo = new FileInfo(this.FullPath);
+
+                if (IsRootDrive(fileInfo.FullName) == true)
+                {
+                    return null;
+                }
+                return new PathInfo(fileInfo.Directory.FullName);
+            }
         }
 
         /// <summary>
@@ -159,6 +210,17 @@ namespace ClassicalFiler
                 }
 
                 return PathType.UnExists;
+            }
+        }
+
+        /// <summary>
+        /// 属性情報を取得します。
+        /// </summary>
+        public FileAttributes Attributes
+        {
+            get
+            {
+                return new FileInfo(this.FullPath).Attributes;
             }
         }
 
