@@ -16,6 +16,17 @@ namespace _Tests._PathInfo
         }
 
         [Test]
+        public void マイコンピュータはドライブの一覧を取得する()
+        {
+            PathInfo[] actuals = new PathInfo("%MyComputer%").GetChildren();
+
+            DriveInfo[] driveInfos = DriveInfo.GetDrives();
+            for (int i = 0; i < driveInfos.Length; i++)
+            {
+                Assert.AreEqual(actuals[i].FullPath, driveInfos[i].Name);
+            }
+        }
+        [Test]
         public void ディレクトリの中の要素を取得する()
         {
             PathInfo[] actual = new PathInfo(Application.StartupPath).GetChildren();

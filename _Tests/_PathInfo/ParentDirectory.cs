@@ -22,11 +22,17 @@ namespace _Tests._PathInfo
         }
 
         [Test]
-        public void ルートドライブの親ディレクトリはnullを取得する()
+        public void ルートドライブの親ディレクトリはマイコンピュータを取得する()
         {
             Assert.AreEqual(
-                null,
+                new PathInfo("%MyComputer%"),
                 new PathInfo(@"C:\").ParentDirectory);
+        }
+
+        [Test]
+        public void マイコンピュータの親ディレクトリはnullを取得する()
+        {
+            Assert.AreEqual(null, new PathInfo("%MyComputer%").ParentDirectory);
         }
     }
 }

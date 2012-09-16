@@ -14,6 +14,13 @@ namespace _Tests._PathInfo
             Assert.AreEqual(null,
                 new PathInfo(Application.StartupPath).Size);
         }
+
+        [Test]
+        public void マイコンピュータはnullを取得する()
+        {
+            Assert.AreEqual(null,
+                new PathInfo("%MyComputer%").Size);
+        }
         [Test]
         public void ファイルはファイルサイズを取得する()
         {

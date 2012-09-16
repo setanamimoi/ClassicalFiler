@@ -12,5 +12,11 @@ namespace _Tests._PathInfo
         {
             Assert.IsTrue((new PathInfo(@".\").Attributes & FileAttributes.Directory) == FileAttributes.Directory);
         }
+
+        [Test]
+        public void マイコンピュータはDirectoryを取得する()
+        {
+            Assert.IsTrue((new PathInfo("%MyComputer%").Attributes & FileAttributes.Directory) == FileAttributes.Directory);
+        }
     }
 }

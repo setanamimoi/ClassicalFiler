@@ -15,6 +15,12 @@ namespace _Tests._PathInfo
                 new PathInfo(Application.StartupPath).Type);
         }
         [Test]
+        public void マイコンピュータはDirectoryを取得する()
+        {
+            Assert.AreEqual(PathInfo.PathType.Directory,
+                new PathInfo("%MyComputer%").Type);
+        }
+        [Test]
         public void ファイルはFileを取得する()
         {
             Assert.AreEqual(

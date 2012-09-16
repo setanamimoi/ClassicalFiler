@@ -10,6 +10,8 @@ namespace ClassicalFiler
     /// </summary>
     public class PathInfo
     {
+        private static string MyComputerPath = string.Format("%{0}%", Environment.SpecialFolder.MyComputer);
+
         /// <summary>
         /// デフォルトインスタンスでの初期化は許可していません。
         /// </summary>
@@ -22,6 +24,11 @@ namespace ClassicalFiler
         /// <param name="path">ファイルパス</param>
         public PathInfo(string path)
         {
+            if (PathInfo.MyComputerPath.ToUpper() == path.ToUpper())
+            {
+                this.FullPath = path;
+                return;
+            }
             FileInfo fileInfo = new FileInfo(path);
 
             string fullPath = fileInfo.FullName;
@@ -56,6 +63,16 @@ namespace ClassicalFiler
         public PathInfo[] GetChildren()
         {
             List<PathInfo> ret = new List<PathInfo>();
+
+            if (this.GetHashCode() == PathInfo.MyComputerPath.ToUpper().GetHashCode())
+            {
+                foreach (DriveInfo drive in DriveInfo.GetDrives())
+                {
+                    ret.Add(new PathInfo(drive.Name));
+                }
+
+                return ret.ToArray();
+            }
 
             if (this.Type != PathType.Directory)
             {
@@ -114,11 +131,15 @@ namespace ClassicalFiler
         {
             get
             {
+                if (this.GetHashCode() == PathInfo.MyComputerPath.ToUpper().GetHashCode())
+                {
+                    return null;
+                }
                 FileInfo fileInfo = new FileInfo(this.FullPath);
 
                 if (IsRootDrive(fileInfo.FullName) == true)
                 {
-                    return null;
+                    return new PathInfo(PathInfo.MyComputerPath);
                 }
                 return new PathInfo(fileInfo.Directory.FullName);
             }
@@ -140,6 +161,16 @@ namespace ClassicalFiler
         {
             get
             {
+                if (PathInfo.MyComputerPath.ToUpper().GetHashCode() == this.GetHashCode())
+                {
+                    return this.FullPath.Trim('%');
+                }
+
+                FileInfo fileInfo = new FileInfo(this.FullPath);
+                if (IsRootDrive(this.FullPath) == true)
+                {
+                    return this.FullPath;
+                }
                 return Path.GetFileName(this.FullPath);
             }
         }
@@ -199,6 +230,11 @@ namespace ClassicalFiler
         {
             get
             {
+                if (this.GetHashCode() == PathInfo.MyComputerPath.ToUpper().GetHashCode())
+                {
+                    return PathType.Directory;
+                }
+
                 if (new DirectoryInfo(this.FullPath).Exists == true)
                 {
                     return PathType.Directory;
