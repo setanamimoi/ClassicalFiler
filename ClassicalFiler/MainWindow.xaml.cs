@@ -107,6 +107,7 @@ namespace ClassicalFiler
 
                 this.DirectoryHistory.Add(directoryState);
                 this.OpenDirectory();
+                e.Handled = true;
             }
         }
 
