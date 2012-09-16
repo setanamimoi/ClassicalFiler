@@ -31,7 +31,7 @@ namespace ClassicalFiler
         private void Window_Initialized(object sender, EventArgs e)
         {
             DirectorySelectState directoryState = 
-                new DirectorySelectState(new PathInfo(@"C:\"));
+                new DirectorySelectState(new PathInfo(@"%MyComputer%"));
 
             this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
