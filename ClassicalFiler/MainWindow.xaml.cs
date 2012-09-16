@@ -72,7 +72,7 @@ namespace ClassicalFiler
                 this.DirectoryHistory.Current.SelectPath = selectPath;
 
                 DirectorySelectState directoryState = 
-                    new DirectorySelectState(nextDirectory, selectPath);
+                    new DirectorySelectState(nextDirectory);
 
                 this.DirectoryHistory.Add(directoryState);
                 this.OpenDirectory();
