@@ -42,8 +42,17 @@ namespace ClassicalFiler
             //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
             if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                this.DirectoryHistory.Current.SelectPath  = this.DirectoryHistory.Current.Directory;
+                this.DirectoryHistory.Current.SelectPath  = this.dataGrid.SelectedItem as PathInfo;
                 if (this.DirectoryHistory.MovePrevious() == false)
+                {
+                    return;
+                }
+                this.OpenDirectory();
+            }
+            else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
+            {
+                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                if (this.DirectoryHistory.MoveNext() == false)
                 {
                     return;
                 }
@@ -51,7 +60,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
-                PathInfo selectPath = this.DirectoryHistory.Current.Directory;
+                PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
 
                 PathInfo nextDirectory = this.DirectoryHistory.Current.Directory.ParentDirectory;
 
@@ -91,7 +100,7 @@ namespace ClassicalFiler
                     return;
                 }
 
-                this.DirectoryHistory.Current.SelectPath = nextPath;
+                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
 
                 DirectorySelectState directoryState = 
                     new DirectorySelectState(nextPath);

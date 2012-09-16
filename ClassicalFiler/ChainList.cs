@@ -70,6 +70,26 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// 連鎖リストの次の項目に移動します。
+        /// </summary>
+        /// <returns>移動できた場合 true 、そうでなければ false 。</returns>
+        public bool MoveNext()
+        {
+            if (this.CurrentChainItem == null)
+            {
+                return false;
+            }
+            if (this.CurrentChainItem.Next == null)
+            {
+                return false;
+            }
+
+            this.CurrentChainItem = this.CurrentChainItem.Next;
+
+            return true;
+        }
+
+        /// <summary>
         /// ChainList クラスで使用する 連鎖項目です。
         /// </summary>
         /// <typeparam name="ChainT">連鎖項目の型</typeparam>
