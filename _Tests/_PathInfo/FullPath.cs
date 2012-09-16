@@ -13,6 +13,11 @@ namespace _Tests._PathInfo
             Assert.AreEqual(Directory.GetCurrentDirectory().TrimEnd('\\'), new PathInfo(new FileInfo(@".\").FullName + @"\\").FullPath);
         }
         [Test]
+        public void マイコンピュータの場合パーセンテージ付きのMyComputerを取得する()
+        {
+            Assert.AreEqual(@"%MyComputer%", new PathInfo(@"%MyComputer%").FullPath);
+        }
+        [Test]
         public void ルートドライブの場合サフィックスにセパレータが追加される()
         {
             Assert.AreEqual(@"C:\", new PathInfo(@"C:\").FullPath);

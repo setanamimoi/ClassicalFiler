@@ -23,6 +23,11 @@ namespace _Tests._PathInfo
                 new PathInfo(Application.ExecutablePath).LastWriteTime);
         }
         [Test]
+        public void マイコンピュータはnullを取得する()
+        {
+            Assert.AreEqual(null, new PathInfo(Path.Combine(Application.StartupPath, "%MyComputer%")).LastWriteTime);
+        }
+        [Test]
         public void 存在しないファイルはnullを取得する()
         {
             Assert.AreEqual(null, new PathInfo(Path.Combine(Application.StartupPath, "存在しないファイル.txt")).LastWriteTime);

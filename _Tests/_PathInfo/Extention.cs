@@ -15,6 +15,11 @@ namespace _Tests._PathInfo
         }
 
         [Test]
+        public void マイコンピュータはnullを取得する()
+        {
+            Assert.AreEqual(null, new PathInfo("%MyComputer%").Extention);
+        }
+        [Test]
         public void ディレクトリはnullを取得する()
         {
             Assert.AreEqual(null, new PathInfo(Application.StartupPath).Extention);

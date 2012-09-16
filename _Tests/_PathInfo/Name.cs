@@ -15,6 +15,18 @@ namespace _Tests._PathInfo
                 new PathInfo(Application.StartupPath).Name);
         }
         [Test]
+        public void マイコンピュータはMyComputerを取得する()
+        {
+            Assert.AreEqual("MyComputer",
+                new PathInfo("%MyComputer%").Name);
+        }
+        [Test]
+        public void ルートドライブはフルパスを取得する()
+        {
+            Assert.AreEqual(@"C:\",
+                new PathInfo(@"C:\").Name);
+        }
+        [Test]
         public void ファイル名を取得する()
         {
             Assert.AreEqual(
