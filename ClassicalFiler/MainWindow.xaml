@@ -10,8 +10,8 @@
         <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="True" />
-                <DataGridTextColumn Header="更新日時" Binding="{Binding LastWriteTime, StringFormat=yyyy/MM/dd HH:mm:ss}" IsReadOnly="True" />
                 <DataGridTextColumn Header="種類" Binding="{Binding Extention}" IsReadOnly="True" />
+                <DataGridTextColumn Header="更新日時" Binding="{Binding LastWriteTime, StringFormat=yyyy/MM/dd HH:mm:ss}" IsReadOnly="True" />
                 <DataGridTextColumn Header="サイズ" Binding="{Binding Size, Converter={StaticResource FileSizeConverter}, ConverterParameter='#,##0.##:FS2'}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="{x:Type TextBlock}">
