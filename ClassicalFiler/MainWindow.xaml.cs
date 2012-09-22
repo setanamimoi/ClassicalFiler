@@ -62,7 +62,8 @@ namespace ClassicalFiler
             {
                 PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
 
-                PathInfo nextDirectory = this.DirectoryHistory.Current.Directory.ParentDirectory;
+                PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
+                PathInfo nextDirectory = selectDirectory.ParentDirectory;
 
                 if (nextDirectory == null)
                 {
@@ -75,6 +76,8 @@ namespace ClassicalFiler
                     new DirectorySelectState(nextDirectory);
 
                 this.DirectoryHistory.Add(directoryState);
+
+                this.DirectoryHistory.Current.SelectPath = selectDirectory;
                 this.OpenDirectory();
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
