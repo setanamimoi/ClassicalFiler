@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace ClassicalFiler
 {
@@ -31,7 +32,7 @@ namespace ClassicalFiler
         private void Window_Initialized(object sender, EventArgs e)
         {
             DirectorySelectState directoryState = 
-                new DirectorySelectState(new PathInfo(@"%MyComputer%"));
+                new DirectorySelectState(new PathInfo(@"C:\"));
 
             this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
@@ -42,7 +43,7 @@ namespace ClassicalFiler
             //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
             if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                this.DirectoryHistory.Current.SelectPath  = this.dataGrid.SelectedItem as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
                 if (this.DirectoryHistory.MovePrevious() == false)
                 {
                     return;
@@ -58,6 +59,12 @@ namespace ClassicalFiler
                 }
                 this.OpenDirectory();
             }
+            else if (Keyboard.IsKeyDown(Key.F2) == true)
+            {
+                PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
+                this.dataGrid.IsReadOnly = false;
+                this.dataGrid.BeginEdit();
+            }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
                 PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
@@ -72,7 +79,7 @@ namespace ClassicalFiler
 
                 this.DirectoryHistory.Current.SelectPath = selectPath;
 
-                DirectorySelectState directoryState = 
+                DirectorySelectState directoryState =
                     new DirectorySelectState(nextDirectory);
 
                 this.DirectoryHistory.Add(directoryState);
@@ -124,7 +131,11 @@ namespace ClassicalFiler
         {
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
-            this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
+            dynamic[] bindModels = BindingModel.CreateBindingModel(
+                this.DirectoryHistory.Current.Directory.GetChildren());
+
+            this.dataGrid.ItemsSource = bindModels;
+
             this.dataGrid.Focus();
 
             object firstItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
@@ -144,6 +155,35 @@ namespace ClassicalFiler
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+        }
+    }
+
+    public class BindingModel
+    {
+        public static dynamic[] CreateBindingModel(params PathInfo[] instance)
+        {
+            List<object> ret = new List<object>();
+
+            foreach (PathInfo i in instance)
+            {
+                dynamic x = new System.Dynamic.ExpandoObject();
+
+                System.Reflection.PropertyInfo[] ps = i.GetType().GetProperties();
+
+                foreach (System.Reflection.PropertyInfo p in ps)
+                {
+                    object o = p.GetValue(i, null);
+
+                    ((System.Collections.Generic.IDictionary<string, object>)x).Add(p.Name, o);
+
+                    
+                }
+
+                x.Instance = i;
+                ret.Add(x);
+            }
+            
+            return ret.ToArray();
         }
     }
 }
