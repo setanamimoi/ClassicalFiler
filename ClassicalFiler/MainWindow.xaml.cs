@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.Generic;
 
 namespace ClassicalFiler
 {
@@ -89,28 +89,31 @@ namespace ClassicalFiler
                     return;
                 }
 
-                if (nextPath.Type != PathInfo.PathType.Directory)
+                if (nextPath.Type == PathInfo.PathType.File)
                 {
+                    using (Process.Start(nextPath.FullPath)) { }
                     e.Handled = true;
-                    return;
                 }
-
-                if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                else if (nextPath.Type == PathInfo.PathType.Directory)
                 {
-                    MessageBox.Show(
-                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                    if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    {
+                        MessageBox.Show(
+                            string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                        e.Handled = true;
+                        return;
+                    }
+
+                    this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+
+                    DirectorySelectState directoryState =
+                        new DirectorySelectState(nextPath);
+
+                    this.DirectoryHistory.Add(directoryState);
+                    this.OpenDirectory();
                     e.Handled = true;
-                    return;
+
                 }
-
-                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
-
-                DirectorySelectState directoryState = 
-                    new DirectorySelectState(nextPath);
-
-                this.DirectoryHistory.Add(directoryState);
-                this.OpenDirectory();
-                e.Handled = true;
             }
         }
 
