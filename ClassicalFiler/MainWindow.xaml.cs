@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Collections.Generic;
+using System.Dynamic;
 
 namespace ClassicalFiler
 {
@@ -40,10 +41,23 @@ namespace ClassicalFiler
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (this.IsEdit == true)
+            {
+                return;
+            }
+
+            dynamic selectedDynamicItem = this.dataGrid.SelectedItem;
+            
+            if (selectedDynamicItem == null)
+            {
+                return;
+            }
+
+
             //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
             if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
                 if (this.DirectoryHistory.MovePrevious() == false)
                 {
                     return;
@@ -52,7 +66,7 @@ namespace ClassicalFiler
             }
             else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
             {
-                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
                 if (this.DirectoryHistory.MoveNext() == false)
                 {
                     return;
@@ -61,13 +75,13 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {
-                PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
-                this.dataGrid.IsReadOnly = false;
+                PathInfo selectPath = selectedDynamicItem.Instance as PathInfo;
+                this.dataGrid.Columns.First().IsReadOnly = false;
                 this.dataGrid.BeginEdit();
             }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
-                PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
+                PathInfo selectPath = selectedDynamicItem.Instance as PathInfo;
 
                 PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
                 PathInfo nextDirectory = selectDirectory.ParentDirectory;
@@ -89,7 +103,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
-                PathInfo nextPath = this.dataGrid.SelectedItem as PathInfo;
+                PathInfo nextPath = selectedDynamicItem.Instance as PathInfo;
 
                 if (nextPath == null)
                 {
@@ -111,7 +125,7 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                    this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
 
                     DirectorySelectState directoryState =
                         new DirectorySelectState(nextPath);
@@ -138,7 +152,14 @@ namespace ClassicalFiler
 
             this.dataGrid.Focus();
 
-            object firstItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
+            dynamic firstDynamicItem = this.dataGrid.Items.Cast<dynamic>().FirstOrDefault();
+
+            if (firstDynamicItem == null)
+            {
+                return;
+            }
+
+            object firstItem = firstDynamicItem.Instance;
 
             if (firstItem == null)
             {
@@ -147,14 +168,73 @@ namespace ClassicalFiler
 
             if (selectPath == null)
             {
-                this.dataGrid.SelectedItem = firstItem;
+                foreach (dynamic i in this.dataGrid.Items)
+                {
+                    if(i.Instance == firstItem)
+                    {
+                        this.dataGrid.SelectedItem = i;
+                        break;
+                    }
+                }
             }
             else
             {
-                this.dataGrid.SelectedItem = selectPath;
+                foreach (dynamic i in this.dataGrid.Items)
+                {
+                    if (i.Instance.Equals(selectPath) == true)
+                    {
+                        this.dataGrid.SelectedItem = i;
+                        break;
+                    }
+                }
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+
+            dataGrid.Columns.First().IsReadOnly = false;
+        }
+
+        private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            dynamic element = e.EditingElement.DataContext as ExpandoObject;
+            if (element == null)
+            {
+                return;
+            }
+
+            PathInfo elementPath = element.Instance as PathInfo;
+
+            if (elementPath == null)
+            {
+                return;
+            }
+
+            TextBox renamedTextBox = e.EditingElement as TextBox;
+
+            PathInfo renamedPath = new PathInfo(Path.Combine(elementPath.ParentDirectory.FullPath, renamedTextBox.Text));
+            if (elementPath.Type == PathInfo.PathType.Directory)
+            {
+                Directory.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+            else if(elementPath.Type == PathInfo.PathType.File)
+            {
+                File.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+            
+
+            element.Instance = renamedPath;
+            this.IsEdit = false;
+        }
+
+        private void dataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
+        {
+        }
+
+        private bool IsEdit = false;
+
+        private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
+        {
+            this.IsEdit = true;
         }
     }
 
@@ -181,7 +261,9 @@ namespace ClassicalFiler
 
                 x.Instance = i;
                 ret.Add(x);
+
             }
+
             
             return ret.ToArray();
         }
