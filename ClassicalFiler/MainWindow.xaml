@@ -7,7 +7,7 @@
         <Root:FileSizeConverter x:Key="FileSizeConverter" />
     </Window.Resources>
     <Grid>
-        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding" BeginningEdit="dataGrid_BeginningEdit" PreparingCellForEdit="dataGrid_PreparingCellForEdit">
+        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding" PreparingCellForEdit="dataGrid_PreparingCellForEdit">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="True" />
                 <DataGridTextColumn Header="種類" Binding="{Binding Extention}" IsReadOnly="True" />

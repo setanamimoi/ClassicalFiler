@@ -226,10 +226,6 @@ namespace ClassicalFiler
             this.IsEdit = false;
         }
 
-        private void dataGrid_BeginningEdit(object sender, DataGridBeginningEditEventArgs e)
-        {
-        }
-
         private bool IsEdit = false;
 
         private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
