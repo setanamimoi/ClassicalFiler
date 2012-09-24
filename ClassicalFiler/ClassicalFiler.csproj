@@ -84,6 +84,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ChainList.cs" />
+    <Compile Include="DataGridDynamicModelBinder.cs" />
     <Compile Include="DirectorySelectState.cs" />
     <Compile Include="FileSizeConverter.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />

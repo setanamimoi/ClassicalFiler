@@ -5,8 +5,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.Generic;
-using System.Dynamic;
 
 namespace ClassicalFiler
 {
@@ -18,9 +16,15 @@ namespace ClassicalFiler
         public MainWindow()
         {
             this.DirectoryHistory = new ChainList<DirectorySelectState>();
-            InitializeComponent();
+            
+            this.InitializeComponent();
         }
 
+        private DataGridDynamicModelBinder<PathInfo> DataGridModelBinder
+        {
+            get;
+            set;
+        }
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
@@ -32,6 +36,8 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
+            this.DataGridModelBinder = new DataGridDynamicModelBinder<PathInfo>(this.dataGrid);
+
             DirectorySelectState directoryState = 
                 new DirectorySelectState(new PathInfo(@"C:\"));
 
@@ -46,18 +52,17 @@ namespace ClassicalFiler
                 return;
             }
 
-            dynamic selectedDynamicItem = this.dataGrid.SelectedItem;
+            PathInfo selectedItem = this.DataGridModelBinder.SelectedDataContext;
             
-            if (selectedDynamicItem == null)
+            if (selectedItem == null)
             {
                 return;
             }
 
-
             //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
             if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedItem;
                 if (this.DirectoryHistory.MovePrevious() == false)
                 {
                     return;
@@ -66,7 +71,7 @@ namespace ClassicalFiler
             }
             else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
             {
-                this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedItem;
                 if (this.DirectoryHistory.MoveNext() == false)
                 {
                     return;
@@ -75,13 +80,13 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {
-                PathInfo selectPath = selectedDynamicItem.Instance as PathInfo;
+                PathInfo selectPath = selectedItem;
                 this.dataGrid.Columns.First().IsReadOnly = false;
                 this.dataGrid.BeginEdit();
             }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
-                PathInfo selectPath = selectedDynamicItem.Instance as PathInfo;
+                PathInfo selectPath = selectedItem;
 
                 PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
                 PathInfo nextDirectory = selectDirectory.ParentDirectory;
@@ -103,7 +108,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
-                PathInfo nextPath = selectedDynamicItem.Instance as PathInfo;
+                PathInfo nextPath = selectedItem;
 
                 if (nextPath == null)
                 {
@@ -125,7 +130,7 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = selectedDynamicItem.Instance as PathInfo;
+                    this.DirectoryHistory.Current.SelectPath = selectedItem;
 
                     DirectorySelectState directoryState =
                         new DirectorySelectState(nextPath);
@@ -145,21 +150,12 @@ namespace ClassicalFiler
         {
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
-            dynamic[] bindModels = BindingModel.CreateBindingModel(
-                this.DirectoryHistory.Current.Directory.GetChildren());
-
-            this.dataGrid.ItemsSource = bindModels;
+            this.DataGridModelBinder.ItemsSouce = 
+                this.DirectoryHistory.Current.Directory.GetChildren();
 
             this.dataGrid.Focus();
 
-            dynamic firstDynamicItem = this.dataGrid.Items.Cast<dynamic>().FirstOrDefault();
-
-            if (firstDynamicItem == null)
-            {
-                return;
-            }
-
-            object firstItem = firstDynamicItem.Instance;
+            PathInfo firstItem = this.DataGridModelBinder.ItemsSouce.FirstOrDefault();
 
             if (firstItem == null)
             {
@@ -168,25 +164,11 @@ namespace ClassicalFiler
 
             if (selectPath == null)
             {
-                foreach (dynamic i in this.dataGrid.Items)
-                {
-                    if(i.Instance == firstItem)
-                    {
-                        this.dataGrid.SelectedItem = i;
-                        break;
-                    }
-                }
+                this.DataGridModelBinder.SelectedDataContext = firstItem;
             }
             else
             {
-                foreach (dynamic i in this.dataGrid.Items)
-                {
-                    if (i.Instance.Equals(selectPath) == true)
-                    {
-                        this.dataGrid.SelectedItem = i;
-                        break;
-                    }
-                }
+                this.DataGridModelBinder.SelectedDataContext = selectPath;
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
@@ -196,13 +178,7 @@ namespace ClassicalFiler
 
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
-            dynamic element = e.EditingElement.DataContext as ExpandoObject;
-            if (element == null)
-            {
-                return;
-            }
-
-            PathInfo elementPath = element.Instance as PathInfo;
+            PathInfo elementPath = this.DataGridModelBinder.GetDataContext(e.Row);
 
             if (elementPath == null)
             {
@@ -220,9 +196,8 @@ namespace ClassicalFiler
             {
                 File.Move(elementPath.FullPath, renamedPath.FullPath);
             }
-            
 
-            element.Instance = renamedPath;
+            this.DataGridModelBinder.SetDataContext(e.Row, renamedPath);
             this.IsEdit = false;
         }
 
@@ -231,37 +206,6 @@ namespace ClassicalFiler
         private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
         {
             this.IsEdit = true;
-        }
-    }
-
-    public class BindingModel
-    {
-        public static dynamic[] CreateBindingModel(params PathInfo[] instance)
-        {
-            List<object> ret = new List<object>();
-
-            foreach (PathInfo i in instance)
-            {
-                dynamic x = new System.Dynamic.ExpandoObject();
-
-                System.Reflection.PropertyInfo[] ps = i.GetType().GetProperties();
-
-                foreach (System.Reflection.PropertyInfo p in ps)
-                {
-                    object o = p.GetValue(i, null);
-
-                    ((System.Collections.Generic.IDictionary<string, object>)x).Add(p.Name, o);
-
-                    
-                }
-
-                x.Instance = i;
-                ret.Add(x);
-
-            }
-
-            
-            return ret.ToArray();
         }
     }
 }
