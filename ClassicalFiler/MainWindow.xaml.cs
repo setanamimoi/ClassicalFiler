@@ -81,7 +81,7 @@ namespace ClassicalFiler
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {
                 PathInfo selectPath = selectedItem;
-                this.dataGrid.Columns.First().IsReadOnly = false;
+                this.IsEdit = true;
                 this.dataGrid.BeginEdit();
             }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
@@ -172,12 +172,14 @@ namespace ClassicalFiler
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
-
-            dataGrid.Columns.First().IsReadOnly = false;
         }
 
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
+            if (e.EditAction == DataGridEditAction.Cancel)
+            {
+                return;
+            }
             PathInfo elementPath = this.DataGridModelBinder.GetDataContext(e.Row);
 
             if (elementPath == null)
@@ -201,8 +203,11 @@ namespace ClassicalFiler
             this.IsEdit = false;
         }
 
-        private bool IsEdit = false;
-
+        private bool IsEdit
+        {
+            get;
+            set;
+        }
         private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
         {
             this.IsEdit = true;
