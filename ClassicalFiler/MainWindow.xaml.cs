@@ -16,9 +16,15 @@ namespace ClassicalFiler
         public MainWindow()
         {
             this.DirectoryHistory = new ChainList<DirectorySelectState>();
-            InitializeComponent();
+            
+            this.InitializeComponent();
         }
 
+        private DataGridDynamicModelBinder<PathInfo> DataGridModelBinder
+        {
+            get;
+            set;
+        }
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
@@ -30,8 +36,10 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
+            this.DataGridModelBinder = new DataGridDynamicModelBinder<PathInfo>(this.dataGrid);
+
             DirectorySelectState directoryState = 
-                new DirectorySelectState(new PathInfo(@"%MyComputer%"));
+                new DirectorySelectState(new PathInfo(@"C:\"));
 
             this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
@@ -39,10 +47,22 @@ namespace ClassicalFiler
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
+            if (this.IsEdit == true)
+            {
+                return;
+            }
+
+            PathInfo selectedItem = this.DataGridModelBinder.SelectedDataContext;
+            
+            if (selectedItem == null)
+            {
+                return;
+            }
+
             //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
             if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
             {
-                this.DirectoryHistory.Current.SelectPath  = this.dataGrid.SelectedItem as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedItem;
                 if (this.DirectoryHistory.MovePrevious() == false)
                 {
                     return;
@@ -51,16 +71,22 @@ namespace ClassicalFiler
             }
             else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
             {
-                this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                this.DirectoryHistory.Current.SelectPath = selectedItem;
                 if (this.DirectoryHistory.MoveNext() == false)
                 {
                     return;
                 }
                 this.OpenDirectory();
             }
+            else if (Keyboard.IsKeyDown(Key.F2) == true)
+            {
+                PathInfo selectPath = selectedItem;
+                this.IsEdit = true;
+                this.dataGrid.BeginEdit();
+            }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
-                PathInfo selectPath = this.dataGrid.SelectedItem as PathInfo;
+                PathInfo selectPath = selectedItem;
 
                 PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
                 PathInfo nextDirectory = selectDirectory.ParentDirectory;
@@ -72,7 +98,7 @@ namespace ClassicalFiler
 
                 this.DirectoryHistory.Current.SelectPath = selectPath;
 
-                DirectorySelectState directoryState = 
+                DirectorySelectState directoryState =
                     new DirectorySelectState(nextDirectory);
 
                 this.DirectoryHistory.Add(directoryState);
@@ -82,7 +108,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
             {
-                PathInfo nextPath = this.dataGrid.SelectedItem as PathInfo;
+                PathInfo nextPath = selectedItem;
 
                 if (nextPath == null)
                 {
@@ -104,7 +130,7 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = this.dataGrid.SelectedItem as PathInfo;
+                    this.DirectoryHistory.Current.SelectPath = selectedItem;
 
                     DirectorySelectState directoryState =
                         new DirectorySelectState(nextPath);
@@ -124,10 +150,12 @@ namespace ClassicalFiler
         {
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
-            this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
+            this.DataGridModelBinder.ItemsSouce = 
+                this.DirectoryHistory.Current.Directory.GetChildren();
+
             this.dataGrid.Focus();
 
-            object firstItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
+            PathInfo firstItem = this.DataGridModelBinder.ItemsSouce.FirstOrDefault();
 
             if (firstItem == null)
             {
@@ -136,14 +164,53 @@ namespace ClassicalFiler
 
             if (selectPath == null)
             {
-                this.dataGrid.SelectedItem = firstItem;
+                this.DataGridModelBinder.SelectedDataContext = firstItem;
             }
             else
             {
-                this.dataGrid.SelectedItem = selectPath;
+                this.DataGridModelBinder.SelectedDataContext = selectPath;
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+        }
+
+        private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.EditAction == DataGridEditAction.Cancel)
+            {
+                return;
+            }
+            PathInfo elementPath = this.DataGridModelBinder.GetDataContext(e.Row);
+
+            if (elementPath == null)
+            {
+                return;
+            }
+
+            TextBox renamedTextBox = e.EditingElement as TextBox;
+
+            PathInfo renamedPath = new PathInfo(Path.Combine(elementPath.ParentDirectory.FullPath, renamedTextBox.Text));
+            if (elementPath.Type == PathInfo.PathType.Directory)
+            {
+                Directory.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+            else if(elementPath.Type == PathInfo.PathType.File)
+            {
+                File.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+
+            this.DataGridModelBinder.SetDataContext(e.Row, renamedPath);
+            this.IsEdit = false;
+        }
+
+        private bool IsEdit
+        {
+            get;
+            set;
+        }
+        private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
+        {
+            this.IsEdit = true;
         }
     }
 }

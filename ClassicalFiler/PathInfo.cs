@@ -100,16 +100,77 @@ namespace ClassicalFiler
         {
             PathInfo compare = obj as PathInfo;
 
-            if (compare == null)
+            if ((object)compare == null)
             {
                 return false;
             }
 
-            if (this.GetHashCode() == compare.GetHashCode())
+            if (this == compare)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// PathInfo のインスタンス同士で オブジェクトが等しいかどうかを判断します。
+        /// </summary>
+        /// <param name="compareBase">比較元 PathInfo</param>
+        /// <param name="compareTo">比較先 PathInfo</param>
+        /// <returns>オブジェクトが等しい場合 true 、そうでない場合 false 。</returns>
+        public static bool operator ==(PathInfo compareBase, PathInfo compareTo)
+        {
+            object compareBaseObject = compareBase as object;
+            object compareToObject = compareTo as object;
+            
+            if (compareBaseObject == null && compareToObject == null)
+            {
+                return true;
+            }
+            if (compareBaseObject == null)
+            {
+                return false;
+            }
+            if (compareToObject == null)
+            {
+                return false;
+            }
+
+            if (compareBaseObject.GetHashCode() == compareToObject.GetHashCode())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// PathInfo のインスタンス同士で オブジェクトが等しくないかどうかを判断します。
+        /// </summary>
+        /// <param name="compareBase">比較元 PathInfo</param>
+        /// <param name="compareTo">比較先 PathInfo</param>
+        /// <returns>オブジェクトが等しくない場合 true 、そうでない場合 false 。</returns>
+        public static bool operator !=(PathInfo compareBase, PathInfo compareTo)
+        {
+            object compareBaseObject = compareBase as object;
+            object compareToObject = compareTo as object;
+
+            if (compareBaseObject == null && compareToObject == null)
+            {
+                return false;
+            }
+            if (compareBaseObject == null)
+            {
+                return true;
+            }
+            if (compareToObject == null)
             {
                 return true;
             }
 
+            if (compareBaseObject.GetHashCode() != compareToObject.GetHashCode())
+            {
+                return true;
+            }
             return false;
         }
 

@@ -7,9 +7,9 @@
         <Root:FileSizeConverter x:Key="FileSizeConverter" />
     </Window.Resources>
     <Grid>
-        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown">
+        <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding" PreparingCellForEdit="dataGrid_PreparingCellForEdit">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="True" />
+                <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="False" />
                 <DataGridTextColumn Header="種類" Binding="{Binding Extention}" IsReadOnly="True" />
                 <DataGridTextColumn Header="更新日時" Binding="{Binding LastWriteTime, StringFormat=yyyy/MM/dd HH:mm:ss}" IsReadOnly="True" />
                 <DataGridTextColumn Header="サイズ" Binding="{Binding Size, Converter={StaticResource FileSizeConverter}, ConverterParameter='#,##0.##:FS2'}" IsReadOnly="True">
