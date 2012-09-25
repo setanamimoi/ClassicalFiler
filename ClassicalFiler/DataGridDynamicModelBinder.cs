@@ -136,7 +136,7 @@ namespace ClassicalFiler
         /// </summary>
         /// <param name="models">ラッパー元モデル</param>
         /// <returns>ラッパーモデルの配列</returns>
-        private static dynamic[] CreateWrapModel(params T[] models)
+        public static dynamic[] CreateWrapModel(params T[] models)
         {
             List<object> ret = new List<object>();
 

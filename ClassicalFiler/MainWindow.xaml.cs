@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace ClassicalFiler
 {
@@ -78,6 +79,110 @@ namespace ClassicalFiler
                 }
                 this.OpenDirectory();
             }
+            else if (Keyboard.IsKeyDown(Key.Delete) == true)
+            {
+                if (MessageBox.Show("削除していいですか？", "ClassicalFilter", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                List<object> removeList = new List<object>();
+
+                foreach (dynamic item in this.dataGrid.SelectedItems)
+                {
+                    PathInfo pathItem = item.Instance as PathInfo;
+                    if (pathItem.Type == PathInfo.PathType.Directory)
+                    {
+                        Directory.Delete(pathItem.FullPath, true);
+                    }
+                    else
+                    {
+                        File.Delete(pathItem.FullPath);
+                    }
+
+                    removeList.Add(item);
+                }
+
+                this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
+                
+                this.dataGrid.Focus();
+            }
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.C) == true)
+            {
+                List<PathInfo> list = new List<PathInfo>();
+                foreach (dynamic item in this.dataGrid.SelectedItems)
+                {
+                    PathInfo pathInfo = item.Instance as PathInfo;
+                    list.Add(pathInfo);
+                }
+
+                string[] pathInfos = list.Select(path => path.FullPath).ToArray();
+
+                ////ファイルドロップ形式のDataObjectを作成する
+                //IDataObject data = new DataObject(DataFormats.FileDrop, pathInfos);
+                ////クリップボードにコピーする
+                //Clipboard.SetDataObject(data);
+
+                //コピーするファイルのパスをStringCollectionに追加する
+                System.Collections.Specialized.StringCollection files =
+                    new System.Collections.Specialized.StringCollection();
+                foreach (string p in pathInfos)
+                {
+                    files.Add(p);
+                }
+                //クリップボードにコピーする
+                Clipboard.SetFileDropList(files);
+                e.Handled = true;
+            }
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.X) == true)
+            {
+                List<PathInfo> list = new List<PathInfo>();
+                foreach (dynamic item in this.dataGrid.SelectedItems)
+                {
+                    PathInfo pathInfo = item.Instance as PathInfo;
+                    list.Add(pathInfo);
+                }
+
+                string[] pathInfos = list.Select(path => path.FullPath).ToArray();
+
+                //ファイルドロップ形式のDataObjectを作成する
+                IDataObject data = new DataObject(DataFormats.FileDrop, pathInfos);
+
+                //DragDropEffects.Moveを設定する（DragDropEffects.Move は 2）
+                byte[] bs = new byte[] { (byte)DragDropEffects.Move, 0, 0, 0 };
+                System.IO.MemoryStream ms = new System.IO.MemoryStream(bs);
+                data.SetData("Preferred DropEffect", ms);
+
+                //クリップボードに切り取る
+                Clipboard.SetDataObject(data);
+                e.Handled = true;
+            }
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.V) == true)
+            {
+                //クリップボードのデータを取得する
+                IDataObject data = Clipboard.GetDataObject();
+                //クリップボードにファイルドロップ形式のデータがあるか確認
+                if (data != null && data.GetDataPresent(DataFormats.FileDrop))
+                {
+                    //コピーされたファイルのリストを取得する
+                    string[] files = (string[])data.GetData(DataFormats.FileDrop);
+                    //DragDropEffectsを取得する
+                    DragDropEffects dde = GetPreferredDropEffect(data);
+
+                    if (dde == DragDropEffects.Move)
+                    {
+                        //ファイルが切り取られていた時
+                        CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, true);
+                    }
+                    else
+                    {
+                        //ファイルがコピーされていた時
+                        CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, false);
+                    }
+                }
+                e.Handled = true;
+            }
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {
                 PathInfo selectPath = selectedItem;
@@ -143,6 +248,118 @@ namespace ClassicalFiler
             }
         }
 
+        /// <summary>
+        /// クリップボードの"Preferred DropEffect"を調べる
+        /// </summary>
+        public static DragDropEffects GetPreferredDropEffect(IDataObject data)
+        {
+            DragDropEffects dde = DragDropEffects.None;
+
+            if (data != null)
+            {
+                //Preferred DropEffect形式のデータを取得する
+                System.IO.MemoryStream ms =
+                    (System.IO.MemoryStream)data.GetData("Preferred DropEffect");
+                if (ms != null)
+                {
+                    //先頭のバイトからDragDropEffectsを取得する
+                    dde = (DragDropEffects)ms.ReadByte();
+
+                    if (dde == (DragDropEffects.Copy | DragDropEffects.Link))
+                    {
+                        Console.WriteLine("コピー");
+                    }
+                    else if (dde == DragDropEffects.Move)
+                    {
+                        Console.WriteLine("切り取り");
+                    }
+                }
+            }
+
+            return dde;
+        }
+
+        /// <summary>
+        /// 複数のファイルを指定したフォルダにコピーまたは移動する
+        /// </summary>
+        public void CopyFilesToDirectory(string[] sourceFiles, string destDir, bool move)
+        {
+            foreach (string sourcePath in sourceFiles)
+            {
+                //コピー先のパスを決定する
+                string destName = System.IO.Path.GetFileName(sourcePath);
+                string destPath = System.IO.Path.Combine(destDir, destName);
+                if (!move)
+                {
+                    if (new PathInfo(sourcePath).Type == PathInfo.PathType.Directory)
+                    {
+                        CopyDirectory(sourcePath, destPath);
+                    }
+                    else
+                    {
+                        System.IO.File.Copy(sourcePath, destPath);
+                    }
+                }
+                else
+                {
+                    //ファイルを移動する
+                    if (new PathInfo(sourcePath).Type == PathInfo.PathType.Directory)
+                    {
+                        System.IO.Directory.Move(sourcePath, destPath);
+                    }
+                    else if(new PathInfo(sourcePath).Type == PathInfo.PathType.File)
+                    {
+                        System.IO.File.Move(sourcePath, destPath);
+                    }
+                    
+                }
+                PathInfo newPath = new PathInfo(destPath);
+                dynamic[] dynamicPath = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel(newPath);
+                foreach(dynamic d in dynamicPath)
+                {
+                    List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
+                    itemlist.Add(d);
+                    this.dataGrid.ItemsSource = itemlist.ToArray();
+                }
+                
+            }
+
+            this.dataGrid.Focus();
+        }
+        /// <summary>
+        /// ディレクトリをコピーする
+        /// </summary>
+        /// <param name="sourceDirName">コピーするディレクトリ</param>
+        /// <param name="destDirName">コピー先のディレクトリ</param>
+        public static void CopyDirectory(
+            string sourceDirName, string destDirName)
+        {
+            //コピー先のディレクトリがないときは作る
+            if (!System.IO.Directory.Exists(destDirName))
+            {
+                System.IO.Directory.CreateDirectory(destDirName);
+                //属性もコピー
+                System.IO.File.SetAttributes(destDirName,
+                    System.IO.File.GetAttributes(sourceDirName));
+            }
+
+            //コピー先のディレクトリ名の末尾に"\"をつける
+            if (destDirName[destDirName.Length - 1] !=
+                    System.IO.Path.DirectorySeparatorChar)
+                destDirName = destDirName + System.IO.Path.DirectorySeparatorChar;
+
+            //コピー元のディレクトリにあるファイルをコピー
+            string[] files = System.IO.Directory.GetFiles(sourceDirName);
+            foreach (string file in files)
+                System.IO.File.Copy(file,
+                    destDirName + System.IO.Path.GetFileName(file), true);
+
+            //コピー元のディレクトリにあるディレクトリについて、
+            //再帰的に呼び出す
+            string[] dirs = System.IO.Directory.GetDirectories(sourceDirName);
+            foreach (string dir in dirs)
+                CopyDirectory(dir, destDirName + System.IO.Path.GetFileName(dir));
+        }
         /// <summary>
         /// カレントディレクトリを開き、一番上のパスを選択します。
         /// </summary>
