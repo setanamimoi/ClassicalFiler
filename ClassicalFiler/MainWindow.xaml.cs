@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace ClassicalFiler
 {
@@ -365,6 +366,7 @@ namespace ClassicalFiler
         /// </summary>
         private void OpenDirectory()
         {
+            this.Title = this.DirectoryHistory.Current.Directory.FullPath + " - ClassicalFiler";
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
             this.DataGridModelBinder.ItemsSouce = 
@@ -428,6 +430,63 @@ namespace ClassicalFiler
         private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
         {
             this.IsEdit = true;
+        }
+
+        private void addressTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.Enter))
+            {
+                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPath;
+
+                string inputText = this.addressTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(inputText) == true)
+                {
+                    PathInfo[] pathes = this.DirectoryHistory.Current.Directory.GetChildren();
+                    this.dataGrid.ItemsSource = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel(pathes);
+                    e.Handled = true;
+                    return;
+                }
+                else if (inputText.IndexOf(":") == 0)
+                {
+                    PathInfo[] pathes =  this.DirectoryHistory.Current.Directory.GetChildren();
+                    this.dataGrid.ItemsSource = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel( pathes.Where(p => Regex.IsMatch(p.Name, inputText.TrimStart(':')) == true).ToArray());
+                    e.Handled = true;
+                    return;
+                }
+
+                PathInfo nextPath = new PathInfo(inputText);
+
+                if (nextPath == null)
+                {
+                    return;
+                }
+
+                if (nextPath.Type == PathInfo.PathType.File)
+                {
+                    using (Process.Start(nextPath.FullPath)) { }
+                    e.Handled = true;
+                }
+                else if (nextPath.Type == PathInfo.PathType.Directory)
+                {
+                    if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    {
+                        MessageBox.Show(
+                            string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                        e.Handled = true;
+                        return;
+                    }
+
+                    this.DirectoryHistory.Current.SelectPath = selectedItem;
+
+                    DirectorySelectState directoryState =
+                        new DirectorySelectState(nextPath);
+
+                    this.DirectoryHistory.Add(directoryState);
+                    this.OpenDirectory();
+                    e.Handled = true;
+
+                }
+            }
         }
     }
 }
