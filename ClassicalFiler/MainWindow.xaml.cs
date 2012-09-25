@@ -88,6 +88,10 @@ namespace ClassicalFiler
                 }
                 this.OpenDirectory();
             }
+            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.L) == true)
+            {
+                this.addressTextBox.Focus();
+            }
             else if (Keyboard.IsKeyDown(Key.Delete) == true)
             {
                 if (MessageBox.Show("削除していいですか？", "ClassicalFilter", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
@@ -372,6 +376,7 @@ namespace ClassicalFiler
         /// </summary>
         private void OpenDirectory()
         {
+            this.addressTextBox.Text = this.DirectoryHistory.Current.Directory.FullPath;
             this.Title = this.DirectoryHistory.Current.Directory.FullPath + " - ClassicalFiler";
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
