@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 
 namespace ClassicalFiler
 {
@@ -22,11 +22,18 @@ namespace ClassicalFiler
             this.InitializeComponent();
         }
 
-        private DataGridDynamicModelBinder<PathInfo> DataGridModelBinder
+        private DataGridWrapperModelExtender<PathInfo> DataGridWrapperModelExtender
         {
             get;
             set;
         }
+
+        private DataGridEditExtender DataGridEditExtender
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
@@ -38,7 +45,8 @@ namespace ClassicalFiler
 
         private void Window_Initialized(object sender, EventArgs e)
         {
-            this.DataGridModelBinder = new DataGridDynamicModelBinder<PathInfo>(this.dataGrid);
+            this.DataGridWrapperModelExtender = new DataGridWrapperModelExtender<PathInfo>(this.dataGrid);
+            this.DataGridEditExtender = new DataGridEditExtender(this.dataGrid);
 
             DirectorySelectState directoryState = 
                 new DirectorySelectState(new PathInfo(@"C:\"));
@@ -49,12 +57,12 @@ namespace ClassicalFiler
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (this.IsEdit == true)
+            if (this.DataGridEditExtender.IsEditing == true)
             {
                 return;
             }
 
-            PathInfo selectedItem = this.DataGridModelBinder.SelectedDataContext;
+            PathInfo selectedItem = this.DataGridWrapperModelExtender.SelectedDataContext;
             
             if (selectedItem == null)
             {
@@ -186,9 +194,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {
-                PathInfo selectPath = selectedItem;
-                this.IsEdit = true;
-                this.dataGrid.BeginEdit();
+                this.DataGridEditExtender.BeginEdit();
             }
             else if (Keyboard.IsKeyDown(Key.Left) == true)
             {
@@ -315,7 +321,7 @@ namespace ClassicalFiler
                     
                 }
                 PathInfo newPath = new PathInfo(destPath);
-                dynamic[] dynamicPath = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel(newPath);
+                dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
                 foreach(dynamic d in dynamicPath)
                 {
                     List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
@@ -369,12 +375,12 @@ namespace ClassicalFiler
             this.Title = this.DirectoryHistory.Current.Directory.FullPath + " - ClassicalFiler";
             PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
 
-            this.DataGridModelBinder.ItemsSouce = 
+            this.DataGridWrapperModelExtender.ItemsSouce = 
                 this.DirectoryHistory.Current.Directory.GetChildren();
 
             this.dataGrid.Focus();
 
-            PathInfo firstItem = this.DataGridModelBinder.ItemsSouce.FirstOrDefault();
+            PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
 
             if (firstItem == null)
             {
@@ -383,11 +389,11 @@ namespace ClassicalFiler
 
             if (selectPath == null)
             {
-                this.DataGridModelBinder.SelectedDataContext = firstItem;
+                this.DataGridWrapperModelExtender.SelectedDataContext = firstItem;
             }
             else
             {
-                this.DataGridModelBinder.SelectedDataContext = selectPath;
+                this.DataGridWrapperModelExtender.SelectedDataContext = selectPath;
             }
 
             dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
@@ -399,7 +405,7 @@ namespace ClassicalFiler
             {
                 return;
             }
-            PathInfo elementPath = this.DataGridModelBinder.GetDataContext(e.Row);
+            PathInfo elementPath = this.DataGridWrapperModelExtender.GetDataContext(e.Row);
 
             if (elementPath == null)
             {
@@ -418,18 +424,8 @@ namespace ClassicalFiler
                 File.Move(elementPath.FullPath, renamedPath.FullPath);
             }
 
-            this.DataGridModelBinder.SetDataContext(e.Row, renamedPath);
-            this.IsEdit = false;
-        }
-
-        private bool IsEdit
-        {
-            get;
-            set;
-        }
-        private void dataGrid_PreparingCellForEdit(object sender, DataGridPreparingCellForEditEventArgs e)
-        {
-            this.IsEdit = true;
+            this.DataGridWrapperModelExtender.SetDataContext(e.Row, renamedPath);
+            this.DataGridEditExtender.EndEdit();
         }
 
         private void addressTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -442,14 +438,14 @@ namespace ClassicalFiler
                 if (string.IsNullOrEmpty(inputText) == true)
                 {
                     PathInfo[] pathes = this.DirectoryHistory.Current.Directory.GetChildren();
-                    this.dataGrid.ItemsSource = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel(pathes);
+                    this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(pathes);
                     e.Handled = true;
                     return;
                 }
                 else if (inputText.IndexOf(":") == 0)
                 {
                     PathInfo[] pathes =  this.DirectoryHistory.Current.Directory.GetChildren();
-                    this.dataGrid.ItemsSource = DataGridDynamicModelBinder<PathInfo>.CreateWrapModel( pathes.Where(p => Regex.IsMatch(p.Name, inputText.TrimStart(':')) == true).ToArray());
+                    this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel( pathes.Where(p => Regex.IsMatch(p.Name, inputText.TrimStart(':')) == true).ToArray());
                     e.Handled = true;
                     return;
                 }

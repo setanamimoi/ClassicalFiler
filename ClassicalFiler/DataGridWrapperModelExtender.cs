@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
-using System.Windows.Controls;
 using System.Reflection;
+using System.Windows.Controls;
 
 namespace ClassicalFiler
 {
@@ -13,12 +13,12 @@ namespace ClassicalFiler
     /// ]]>
     /// </summary>
     /// <typeparam name="T">管理する ItemSouce のラッパー元のクラス</typeparam>
-    public class DataGridDynamicModelBinder<T> where T : class
+    public class DataGridWrapperModelExtender<T> : DataGridExtender where T : class
     {
         /// <summary>
         /// DataGridDynamicModelBinder クラスのデフォルトコンストラクタによるインスタンス初期化は許可していません。
         /// </summary>
-        private DataGridDynamicModelBinder()
+        protected DataGridWrapperModelExtender() : base()
         {
         }
         /// <summary>
@@ -28,18 +28,8 @@ namespace ClassicalFiler
         /// ]]>
         /// </summary>
         /// <param name="source">管理対象のDataGrid</param>
-        public DataGridDynamicModelBinder(DataGrid source)
+        public DataGridWrapperModelExtender(DataGrid source) : base(source)
         {
-            this.Source = source;
-        }
-
-        /// <summary>
-        /// 管理対象のDataGrid クラスを取得します。
-        /// </summary>
-        public DataGrid Source
-        {
-            get;
-            private set;
         }
 
         /// <summary>

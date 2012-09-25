@@ -9,7 +9,7 @@
         <DockPanel>
     <DockPanel>
         <TextBox Name="addressTextBox" PreviewKeyDown="addressTextBox_PreviewKeyDown" DockPanel.Dock="Top" />
-                <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding" PreparingCellForEdit="dataGrid_PreparingCellForEdit" FontFamily="Meiryo" Height="Auto" VerticalAlignment="Top">
+                <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" IsReadOnly="True" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="False" />
                     <DataGridTextColumn Header="種類" Binding="{Binding Extention}" IsReadOnly="True" />
