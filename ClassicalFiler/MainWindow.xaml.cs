@@ -15,8 +15,20 @@ namespace ClassicalFiler
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private string InitializeDirectory
         {
+            get;
+            set;
+        }
+
+        public MainWindow(string initializeDirectory = null)
+        {
+            this.InitializeDirectory = initializeDirectory;
+            if (this.InitializeDirectory == null)
+            {
+                this.InitializeDirectory = "%MyComputer%";
+            }
+            
             this.DirectoryHistory = new ChainList<DirectorySelectState>();
             
             this.InitializeComponent();
@@ -49,7 +61,7 @@ namespace ClassicalFiler
             this.DataGridEditExtender = new DataGridEditExtender(this.dataGrid);
 
             DirectorySelectState directoryState = 
-                new DirectorySelectState(new PathInfo(@"C:\"));
+                new DirectorySelectState(new PathInfo(this.InitializeDirectory));
 
             this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
