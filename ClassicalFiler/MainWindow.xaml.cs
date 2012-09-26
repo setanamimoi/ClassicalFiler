@@ -119,20 +119,15 @@ namespace ClassicalFiler
                 foreach (dynamic item in this.dataGrid.SelectedItems)
                 {
                     PathInfo pathItem = item.Instance as PathInfo;
-                    if (pathItem.Type == PathInfo.PathType.Directory)
-                    {
-                        Directory.Delete(pathItem.FullPath, true);
-                    }
-                    else
-                    {
-                        File.Delete(pathItem.FullPath);
-                    }
+                    pathItem.Delete();
 
                     removeList.Add(item);
                 }
 
-                this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
-                
+                this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel( this.DirectoryHistory.Current.Directory.GetChildren());
+                this.dataGrid.SelectedItem = this.dataGrid.Items.Cast<object>().First();
+
+                e.Handled = true;
                 this.dataGrid.FocusFirstCell();
             }
             else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.C) == true)
@@ -204,6 +199,7 @@ namespace ClassicalFiler
                     }
                 }
                 e.Handled = true;
+                this.dataGrid.FocusFirstCell();
             }
             else if (Keyboard.IsKeyDown(Key.F2) == true)
             {

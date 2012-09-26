@@ -14,6 +14,7 @@ namespace ClassicalFiler
         /// <param name="self">拡張元の DataGrid</param>
         public static void FocusFirstCell(this DataGrid self)
         {
+            self.Focus();
             self.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
         }
     }

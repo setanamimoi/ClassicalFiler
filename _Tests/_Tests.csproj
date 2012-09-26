@@ -63,6 +63,7 @@
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
     <Compile Include="_PathInfo\Combine.cs" />
     <Compile Include="_PathInfo\Copy.cs" />
+    <Compile Include="_PathInfo\Delete.cs" />
     <Compile Include="_PathInfo\Equals.cs" />
     <Compile Include="_PathInfo\GetChildren.cs" />
     <Compile Include="_PathInfo\Extention.cs" />

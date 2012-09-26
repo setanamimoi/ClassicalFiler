@@ -25,7 +25,7 @@ namespace _Tests._PathInfo
             {
                 if (copyPath.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.File.Delete(copyPath.FullPath);
+                    copyPath.Delete();
                 }
             }
         }
@@ -56,11 +56,11 @@ namespace _Tests._PathInfo
             {
                 if (newDirectory1.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory1.FullPath, true);
+                    newDirectory1.Delete();
                 }
                 if (newDirectory2.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory2.FullPath, true);
+                    newDirectory2.Delete();
                 }
             }
         }
@@ -92,11 +92,11 @@ namespace _Tests._PathInfo
             {
                 if (newDirectory1.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory1.FullPath, true);
+                    newDirectory1.Delete();
                 }
                 if (newDirectory2.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory2.FullPath, true);
+                    newDirectory2.Delete();
                 }
             }
         }
@@ -137,12 +137,12 @@ namespace _Tests._PathInfo
             {
                 if (newDirectory1.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory1.FullPath, true);
+                    newDirectory1.Delete();
                 }
 
                 if (newDirectory2.Type != PathInfo.PathType.UnExists)
                 {
-                    System.IO.Directory.Delete(newDirectory2.FullPath, true);
+                    newDirectory2.Delete();
                 }
             }
         }

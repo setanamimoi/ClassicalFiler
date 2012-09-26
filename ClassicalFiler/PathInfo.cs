@@ -84,6 +84,21 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// パスを削除します。
+        /// </summary>
+        public void Delete()
+        {
+            if (this.Type == PathType.File)
+            {
+                File.Delete(this.FullPath);
+            }
+            else if (this.Type == PathType.Directory)
+            {
+                Directory.Delete(this.FullPath, true);
+            }
+        }
+
+        /// <summary>
         /// インスタンスのファイルパスに指定したパス名の配列を連結して 一つのファイルパスを取得します。
         /// </summary>
         /// <param name="pathNames">パス名の配列</param>
