@@ -65,6 +65,8 @@ namespace ClassicalFiler
 
             this.DirectoryHistory.Add(directoryState);
             this.OpenDirectory();
+
+            this.dataGrid.FocusFirstCell();
         }
 
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -131,7 +133,7 @@ namespace ClassicalFiler
 
                 this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
                 
-                this.dataGrid.Focus();
+                this.dataGrid.FocusFirstCell();
             }
             else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.C) == true)
             {
@@ -334,7 +336,6 @@ namespace ClassicalFiler
                     {
                         System.IO.File.Move(sourcePath, destPath);
                     }
-                    
                 }
                 PathInfo newPath = new PathInfo(destPath);
                 dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
@@ -344,10 +345,9 @@ namespace ClassicalFiler
                     itemlist.Add(d);
                     this.dataGrid.ItemsSource = itemlist.ToArray();
                 }
-                
             }
 
-            this.dataGrid.Focus();
+            this.dataGrid.FocusFirstCell();
         }
         /// <summary>
         /// ディレクトリをコピーする
@@ -395,7 +395,7 @@ namespace ClassicalFiler
             this.DataGridWrapperModelExtender.ItemsSouce = 
                 this.DirectoryHistory.Current.Directory.GetChildren();
 
-            this.dataGrid.Focus();
+            this.dataGrid.FocusFirstCell();
 
             PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
 
@@ -447,7 +447,11 @@ namespace ClassicalFiler
 
         private void addressTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.Enter))
+            if (Keyboard.IsKeyDown(Key.Down))
+            {
+                this.dataGrid.FocusFirstCell();
+            }
+            else if (Keyboard.IsKeyDown(Key.Enter))
             {
                 PathInfo selectedItem = this.DirectoryHistory.Current.SelectPath;
 
@@ -497,9 +501,13 @@ namespace ClassicalFiler
                     this.DirectoryHistory.Add(directoryState);
                     this.OpenDirectory();
                     e.Handled = true;
-
                 }
             }
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.dataGrid.FocusFirstCell();
         }
     }
 }
