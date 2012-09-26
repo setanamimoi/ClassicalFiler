@@ -56,6 +56,48 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// 指定したファイルパスにコピーします
+        /// </summary>
+        /// <param name="destination">コピー先のファイル</param>
+        public void Copy(PathInfo destination)
+        {
+            if (this.Type == PathType.File)
+            {
+                File.Copy(this.FullPath, destination.FullPath);
+            }
+            else if (this.Type == PathType.Directory)
+            {
+                //コピー先のディレクトリがないときは作る
+                if (destination.Type == PathType.UnExists)
+                {
+                    System.IO.Directory.CreateDirectory(destination.FullPath);
+                    //属性もコピー
+                    System.IO.File.SetAttributes(destination.FullPath,
+                        System.IO.File.GetAttributes(this.FullPath));
+                }
+
+                foreach (PathInfo path in this.GetChildren())
+                {
+                    path.Copy(destination.Combine(path.Name));
+                }
+            }
+        }
+
+        /// <summary>
+        /// インスタンスのファイルパスに指定したパス名の配列を連結して 一つのファイルパスを取得します。
+        /// </summary>
+        /// <param name="pathNames">パス名の配列</param>
+        /// <returns>連結したファイルパス</returns>
+        public PathInfo Combine(params string[] pathNames)
+        {
+            List<string> pathPartList = new List<string>();
+            pathPartList.Add(this.FullPath);
+            pathPartList.AddRange(pathNames);
+
+            return new PathInfo(Path.Combine(pathPartList.ToArray()));
+        }
+
+        /// <summary>
         /// 子要素を取得します。
         /// </summary>
         /// <returns>パスに関連する子要素の配列。</returns>

@@ -61,6 +61,8 @@
     <Compile Include="_ChainList\Add.cs" />
     <Compile Include="_ChainList\MoveNext.cs" />
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
+    <Compile Include="_PathInfo\Combine.cs" />
+    <Compile Include="_PathInfo\Copy.cs" />
     <Compile Include="_PathInfo\Equals.cs" />
     <Compile Include="_PathInfo\GetChildren.cs" />
     <Compile Include="_PathInfo\Extention.cs" />
