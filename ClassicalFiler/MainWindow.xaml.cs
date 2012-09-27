@@ -219,15 +219,28 @@ namespace ClassicalFiler
                         //DragDropEffectsを取得する
                         DragDropEffects dde = GetPreferredDropEffect(data);
 
-                        if (dde == DragDropEffects.Move)
+                        PathInfo[] ps = files.Select(m => new PathInfo(m)).ToArray();
+
+                        //ファイルが切り取られていた時
+                        foreach (PathInfo p in ps)
                         {
-                            //ファイルが切り取られていた時
-                            CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, true);
-                        }
-                        else
-                        {
-                            //ファイルがコピーされていた時
-                            CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, false);
+                            PathInfo newPath = this.DirectoryHistory.Current.Directory.Combine(p.Name);
+                            if(dde == DragDropEffects.Move)
+                            {
+                                p.Move(newPath);
+                            }
+                            else
+                            {
+                                p.Copy(newPath);
+                            }
+                            
+                            dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
+                            foreach(dynamic d in dynamicPath)
+                            {
+                                List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
+                                itemlist.Add(d);
+                                this.dataGrid.ItemsSource = itemlist.ToArray();
+                            }
                         }
                     }
                     e.Handled = true;
@@ -321,7 +334,6 @@ namespace ClassicalFiler
                 this.SearchStringAtAddressBar =
                     this.SearchStringAtAddressBar.Append(e.Key.ToString());
 
-
                 this.FilterDataGrid();
             }
         }
@@ -355,45 +367,6 @@ namespace ClassicalFiler
             }
 
             return dde;
-        }
-
-        /// <summary>
-        /// 複数のファイルを指定したフォルダにコピーまたは移動する
-        /// </summary>
-        public void CopyFilesToDirectory(string[] sourceFiles, string destDir, bool move)
-        {
-            foreach (string sourcePath in sourceFiles)
-            {
-                //コピー先のパスを決定する
-                string destName = System.IO.Path.GetFileName(sourcePath);
-                string destPath = System.IO.Path.Combine(destDir, destName);
-                if (!move)
-                {
-                    new PathInfo(sourcePath).Copy(new PathInfo(destPath));
-                }
-                else
-                {
-                    //ファイルを移動する
-                    if (new PathInfo(sourcePath).Type == PathInfo.PathType.Directory)
-                    {
-                        System.IO.Directory.Move(sourcePath, destPath);
-                    }
-                    else if(new PathInfo(sourcePath).Type == PathInfo.PathType.File)
-                    {
-                        System.IO.File.Move(sourcePath, destPath);
-                    }
-                }
-                PathInfo newPath = new PathInfo(destPath);
-                dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
-                foreach(dynamic d in dynamicPath)
-                {
-                    List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
-                    itemlist.Add(d);
-                    this.dataGrid.ItemsSource = itemlist.ToArray();
-                }
-            }
-
-            this.dataGrid.FocusFirstCell();
         }
 
         /// <summary>

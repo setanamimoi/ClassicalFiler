@@ -84,6 +84,22 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// パスを移動します。
+        /// </summary>
+        /// <param name="moveTo">移動先</param>
+        public void Move(PathInfo moveTo)
+        {
+            if (this.Type == PathType.File)
+            {
+                File.Move(this.FullPath, moveTo.FullPath);
+            }
+            else if (this.Type == PathType.Directory)
+            {
+                Directory.Move(this.FullPath, moveTo.FullPath);
+            }
+        }
+
+        /// <summary>
         /// パスを削除します。
         /// </summary>
         public void Delete()

@@ -73,6 +73,7 @@
     <Compile Include="_PathInfo\Attributes.cs" />
     <Compile Include="_PathInfo\GetHashCode.cs" />
     <Compile Include="_PathInfo\LastWriteTime.cs" />
+    <Compile Include="_PathInfo\Move.cs" />
     <Compile Include="_PathInfo\OperatorEqual.cs" />
     <Compile Include="_PathInfo\ParentDirectory.cs" />
     <Compile Include="_PathInfo\Size.cs" />
