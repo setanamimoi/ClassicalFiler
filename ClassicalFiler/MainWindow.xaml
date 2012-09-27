@@ -7,7 +7,7 @@
         <Root:FileSizeConverter x:Key="FileSizeConverter" />
     </Window.Resources>
     <DockPanel>
-        <TextBox Name="addressTextBox" PreviewKeyDown="addressTextBox_PreviewKeyDown" DockPanel.Dock="Top" TabIndex="0" />
+        <TextBox Name="addressBar" PreviewKeyDown="addressTextBox_PreviewKeyDown" DockPanel.Dock="Top" TabIndex="0" />
         <DataGrid Name="dataGrid" AutoGenerateColumns="False" GridLinesVisibility="None" IsReadOnly="True" PreviewKeyDown="dataGrid_PreviewKeyDown" CellEditEnding="dataGrid_CellEditEnding" TabIndex="1">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="名前" Binding="{Binding Name}" IsReadOnly="False" />

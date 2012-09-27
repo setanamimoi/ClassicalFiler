@@ -40,9 +40,12 @@ namespace ClassicalFiler
             get
             {
                 dynamic wrapItem = this.Source.SelectedItem;
-                T ret = wrapItem.Instance as T;
+                if (wrapItem == null)
+                {
+                    return null;
+                }
 
-                return ret;
+                return wrapItem.Instance as T;
             }
             set
             {
