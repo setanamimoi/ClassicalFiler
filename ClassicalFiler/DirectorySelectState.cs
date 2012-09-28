@@ -13,11 +13,22 @@ namespace ClassicalFiler
         /// ]]>
         /// </summary>
         /// <param name="directory">開いているディレクトリ</param>
-        /// <param name="selectPath">選択しているパス</param>
-        public DirectorySelectState(PathInfo directory, PathInfo selectPath = null)
+        /// <param name="selectPathes">選択しているパス</param>
+        public DirectorySelectState(PathInfo directory) :this(directory, new PathInfo[]{})
+        {
+        }
+        /// <summary>
+        /// <![CDATA[
+        /// 開いているディレクトリと選択しているパスを指定して
+        /// DirectorySelectState クラスの新しいインスタンスを初期化します。
+        /// ]]>
+        /// </summary>
+        /// <param name="directory">開いているディレクトリ</param>
+        /// <param name="selectPathes">選択しているパス</param>
+        public DirectorySelectState(PathInfo directory, PathInfo[] selectPathes)
         {
             this.Directory = directory;
-            this.SelectPath = selectPath;
+            this.SelectPathes = selectPathes;
         }
 
         /// <summary>
@@ -32,7 +43,7 @@ namespace ClassicalFiler
         /// <summary>
         /// 現在選択しているパスを取得・設定します。
         /// </summary>
-        public PathInfo SelectPath
+        public PathInfo[] SelectPathes
         {
             get;
             set;

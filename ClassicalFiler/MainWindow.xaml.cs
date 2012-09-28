@@ -105,14 +105,14 @@ namespace ClassicalFiler
                 return;
             }
 
-            PathInfo selectedItem = this.DataGridWrapperModelExtender.SelectedDataContext;
+            PathInfo[] selectedItems = this.DataGridWrapperModelExtender.SelectedDataContexts;
             
-            if (selectedItem != null)
+            if (selectedItems.Any() == true)
             {
                 //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
-                if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
+                if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    this.DirectoryHistory.Current.SelectPath = selectedItem;
+                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
                     if (this.DirectoryHistory.MovePrevious() == false)
                     {
                         return;
@@ -122,7 +122,7 @@ namespace ClassicalFiler
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
                 {
-                    this.DirectoryHistory.Current.SelectPath = selectedItem;
+                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
                     if (this.DirectoryHistory.MoveNext() == false)
                     {
                         return;
@@ -254,7 +254,9 @@ namespace ClassicalFiler
                 }
                 else if (Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    PathInfo selectPath = selectedItem;
+                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
+
+                    PathInfo selectPath = selectedItems.First();
 
                     PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
                     PathInfo nextDirectory = selectDirectory.ParentDirectory;
@@ -264,20 +266,20 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = selectPath;
-
                     DirectorySelectState directoryState =
                         new DirectorySelectState(nextDirectory);
 
                     this.DirectoryHistory.Add(directoryState);
 
-                    this.DirectoryHistory.Current.SelectPath = selectDirectory;
+                    this.DirectoryHistory.Current.SelectPathes = new PathInfo[]{selectDirectory};
                     this.OpenDirectory();
                     return;
                 }
                 else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
                 {
-                    PathInfo nextPath = selectedItem;
+                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
+
+                    PathInfo nextPath = selectedItems.First();
 
                     if (nextPath == null)
                     {
@@ -299,8 +301,6 @@ namespace ClassicalFiler
                             e.Handled = true;
                             return;
                         }
-
-                        this.DirectoryHistory.Current.SelectPath = selectedItem;
 
                         DirectorySelectState directoryState =
                             new DirectorySelectState(nextPath);
@@ -375,34 +375,39 @@ namespace ClassicalFiler
         private void OpenDirectory()
         {
             this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
-            this.Title = this.DirectoryHistory.Current.Directory.FullPath + " - ClassicalFiler";
-            PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
+            this.Title = string.Format("{0} - {1}",
+                this.DirectoryHistory.Current.Directory.FullPath, 
+                System.Windows.Forms.Application.ProductName);
 
-            this.SearchStringAtAddressBar = null;
             this.FilterDataGrid();
 
             this.DataGridWrapperModelExtender.ItemsSouce = 
                 this.DirectoryHistory.Current.Directory.GetChildren();
 
+            this.DataGridWrapperModelExtender.SelectedDataContexts =
+                this.DirectoryHistory.Current.SelectPathes;
+
+            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
+
+            if (selectPathes.Any() == false)
+            {
+                PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
+
+                if (firstItem != null)
+                {
+                    this.DataGridWrapperModelExtender.SelectedDataContexts =
+                        new PathInfo[]{ firstItem };
+                }
+            }
+
             this.dataGrid.FocusFirstCell();
 
-            PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
+            this.dataGrid.CurrentCell =
+                new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
 
-            if (firstItem == null)
-            {
-                return;
-            }
-
-            if (selectPath == null)
-            {
-                this.DataGridWrapperModelExtender.SelectedDataContext = firstItem;
-            }
-            else
-            {
-                this.DataGridWrapperModelExtender.SelectedDataContext = selectPath;
-            }
-
-            dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+            this.dataGrid.ScrollIntoView(
+                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
+                this.dataGrid.Columns.First());
         }
 
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -442,7 +447,7 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Enter))
             {
-                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPath;
+                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPathes.First();
 
                 if (this.IsSearchModeAtAddressBar == true)
                 {
@@ -479,7 +484,7 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = selectedItem;
+                    this.DirectoryHistory.Current.SelectPathes = this.DirectoryHistory.Current.SelectPathes;
 
                     DirectorySelectState directoryState =
                         new DirectorySelectState(nextPath);

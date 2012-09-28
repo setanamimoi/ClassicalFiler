@@ -69,6 +69,50 @@ namespace ClassicalFiler
         }
 
         /// <summary>
+        /// 選択中の DataContext のオブジェクト を取得します。
+        /// </summary>
+        public T[] SelectedDataContexts
+        {
+            get
+            {
+                List<T> ret = new List<T>();
+
+                dynamic[] wrapItems = this.Source.SelectedItems.Cast<dynamic>().ToArray() as dynamic[];
+                if (wrapItems == null)
+                {
+                    return ret.ToArray();
+                }
+                foreach (dynamic wrapItem in wrapItems)
+                {
+                    T item = wrapItem.Instance as T;
+                    if (item != null)
+                    {
+                        ret.Add(item);
+                    }
+                }
+
+                return ret.ToArray();
+            }
+            set
+            {
+                if (value == null)
+                {
+                    this.Source.SelectedItems.Clear();
+                    return;
+                }
+                
+                foreach (dynamic wrapItem in this.Source.Items)
+                {
+                    T item = wrapItem.Instance as T;
+                    if (value.Contains(item) == true)
+                    {
+                        this.Source.SelectedItems.Add(wrapItem);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// DataContext となるオブジェクトの配列を取得・設定します。
         /// </summary>
         public T[] ItemsSouce
