@@ -156,63 +156,6 @@ namespace ClassicalFiler
             this.DataGridEditExtender.EndEdit();
         }
 
-        private void addressTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            if (Keyboard.IsKeyDown(Key.Down))
-            {
-                this.dataGrid.FocusFirstCell();
-            }
-            else if (Keyboard.IsKeyDown(Key.Enter))
-            {
-                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPathes.First();
-
-                if (this.IsSearchModeAtAddressBar == true)
-                {
-                    this.FilterDataGrid();
-
-                    e.Handled = true;
-                    return;
-                }
-
-                string inputText = this.addressBar.Text.Trim();
-                PathInfo[] pathes = this.DirectoryHistory.Current.Directory.GetChildren();
-                this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(pathes);
-                e.Handled = true;
-
-                PathInfo nextPath = new PathInfo(inputText);
-
-                if (nextPath == null)
-                {
-                    return;
-                }
-
-                if (nextPath.Type == PathInfo.PathType.File)
-                {
-                    using (Process.Start(nextPath.FullPath)) { }
-                    e.Handled = true;
-                }
-                else if (nextPath.Type == PathInfo.PathType.Directory)
-                {
-                    if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                    {
-                        MessageBox.Show(
-                            string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                        e.Handled = true;
-                        return;
-                    }
-
-                    this.DirectoryHistory.Current.SelectPathes = this.DirectoryHistory.Current.SelectPathes;
-
-                    DirectorySelectState directoryState =
-                        new DirectorySelectState(nextPath);
-
-                    this.DirectoryHistory.Add(directoryState);
-                    this.OpenDirectoryAtDataGrid();
-                    e.Handled = true;
-                }
-            }
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.dataGrid.FocusFirstCell();
@@ -256,6 +199,59 @@ namespace ClassicalFiler
                 }
 
                 return false;
+            }
+        }
+        #endregion
+
+        #region AddressBar 関連イベントハンドラ
+        private void addressBar_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.Down))
+            {
+                this.dataGrid.FocusFirstCell();
+            }
+            else if (Keyboard.IsKeyDown(Key.Enter))
+            {
+                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPathes.First();
+
+                if (this.IsSearchModeAtAddressBar == true)
+                {
+                    this.FilterDataGrid();
+
+                    e.Handled = true;
+                    return;
+                }
+
+                string inputText = this.addressBar.Text.Trim();
+
+                PathInfo nextPath = new PathInfo(inputText);
+
+                if (nextPath == null)
+                {
+                    return;
+                }
+
+                if (nextPath.Type == PathInfo.PathType.UnExists)
+                {
+                    return;
+                }
+
+                DirectorySelectState openDirectory = new DirectorySelectState(nextPath);
+                if (openDirectory.Directory.Type == PathInfo.PathType.File)
+                {
+                    openDirectory.SelectPathes = new PathInfo[] { openDirectory.Directory };
+                    openDirectory.Directory = openDirectory.Directory.ParentDirectory;
+                }
+
+                this.DirectoryHistory.Add(openDirectory);
+
+                this.OpenDirectoryAtDataGrid();
+
+                if (nextPath.Type == PathInfo.PathType.File)
+                {
+                    using (Process.Start(nextPath.FullPath)) { }
+                }
+                e.Handled = true;
             }
         }
         #endregion
