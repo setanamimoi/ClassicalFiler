@@ -31,8 +31,6 @@ namespace ClassicalFiler
             
             this.DirectoryHistory = new ChainList<DirectorySelectState>();
 
-            
-
             this.InitializeComponent();
         }
 
@@ -112,7 +110,6 @@ namespace ClassicalFiler
                 //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
                 if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
                     if (this.DirectoryHistory.MovePrevious() == false)
                     {
                         return;
@@ -122,7 +119,6 @@ namespace ClassicalFiler
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
                 {
-                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
                     if (this.DirectoryHistory.MoveNext() == false)
                     {
                         return;
@@ -254,8 +250,6 @@ namespace ClassicalFiler
                 }
                 else if (Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
-
                     PathInfo selectPath = selectedItems.First();
 
                     PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
@@ -277,8 +271,6 @@ namespace ClassicalFiler
                 }
                 else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
                 {
-                    this.DirectoryHistory.Current.SelectPathes = selectedItems;
-
                     PathInfo nextPath = selectedItems.First();
 
                     if (nextPath == null)
@@ -573,6 +565,18 @@ namespace ClassicalFiler
                 this.dataGrid.FocusFirstCell();
                 this.dataGrid.SelectedItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
             }
+        }
+        #endregion
+
+        #region DataGrid 関連イベントハンドラ
+        private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            this.dataGrid.ScrollIntoView(
+                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
+                this.dataGrid.Columns.First());
+
+            this.DirectoryHistory.Current.SelectPathes =
+                this.DataGridWrapperModelExtender.SelectedDataContexts;
         }
         #endregion
     }
