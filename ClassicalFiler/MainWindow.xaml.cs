@@ -91,7 +91,7 @@ namespace ClassicalFiler
                 new DirectorySelectState(new PathInfo(this.InitializeDirectory));
 
             this.DirectoryHistory.Add(directoryState);
-            this.OpenDirectory();
+            this.OpenDirectoryAtDataGrid();
 
             this.dataGrid.FocusFirstCell();
         }
@@ -114,7 +114,7 @@ namespace ClassicalFiler
                     {
                         return;
                     }
-                    this.OpenDirectory();
+                    this.OpenDirectoryAtDataGrid();
                     return;
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
@@ -123,7 +123,7 @@ namespace ClassicalFiler
                     {
                         return;
                     }
-                    this.OpenDirectory();
+                    this.OpenDirectoryAtDataGrid();
                     return;
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.L) == true)
@@ -266,7 +266,7 @@ namespace ClassicalFiler
                     this.DirectoryHistory.Add(directoryState);
 
                     this.DirectoryHistory.Current.SelectPathes = new PathInfo[]{selectDirectory};
-                    this.OpenDirectory();
+                    this.OpenDirectoryAtDataGrid();
                     return;
                 }
                 else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
@@ -298,7 +298,7 @@ namespace ClassicalFiler
                             new DirectorySelectState(nextPath);
 
                         this.DirectoryHistory.Add(directoryState);
-                        this.OpenDirectory();
+                        this.OpenDirectoryAtDataGrid();
                         e.Handled = true;
                         return;
                     }
@@ -359,47 +359,6 @@ namespace ClassicalFiler
             }
 
             return dde;
-        }
-
-        /// <summary>
-        /// カレントディレクトリを開き、一番上のパスを選択します。
-        /// </summary>
-        private void OpenDirectory()
-        {
-            this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
-            this.Title = string.Format("{0} - {1}",
-                this.DirectoryHistory.Current.Directory.FullPath, 
-                System.Windows.Forms.Application.ProductName);
-
-            this.FilterDataGrid();
-
-            this.DataGridWrapperModelExtender.ItemsSouce = 
-                this.DirectoryHistory.Current.Directory.GetChildren();
-
-            this.DataGridWrapperModelExtender.SelectedDataContexts =
-                this.DirectoryHistory.Current.SelectPathes;
-
-            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
-
-            if (selectPathes.Any() == false)
-            {
-                PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
-
-                if (firstItem != null)
-                {
-                    this.DataGridWrapperModelExtender.SelectedDataContexts =
-                        new PathInfo[]{ firstItem };
-                }
-            }
-
-            this.dataGrid.FocusFirstCell();
-
-            this.dataGrid.CurrentCell =
-                new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
-
-            this.dataGrid.ScrollIntoView(
-                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
-                this.dataGrid.Columns.First());
         }
 
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -482,7 +441,7 @@ namespace ClassicalFiler
                         new DirectorySelectState(nextPath);
 
                     this.DirectoryHistory.Add(directoryState);
-                    this.OpenDirectory();
+                    this.OpenDirectoryAtDataGrid();
                     e.Handled = true;
                 }
             }
@@ -536,6 +495,46 @@ namespace ClassicalFiler
         #endregion
 
         #region DataGrid 関連メソッド
+        /// <summary>
+        /// カレントディレクトリを開き、一番上のパスを選択します。
+        /// </summary>
+        private void OpenDirectoryAtDataGrid()
+        {
+            this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
+            this.Title = string.Format("{0} - {1}",
+                this.DirectoryHistory.Current.Directory.FullPath,
+                System.Windows.Forms.Application.ProductName);
+
+            this.FilterDataGrid();
+
+            this.DataGridWrapperModelExtender.ItemsSouce =
+                this.DirectoryHistory.Current.Directory.GetChildren();
+
+            this.DataGridWrapperModelExtender.SelectedDataContexts =
+                this.DirectoryHistory.Current.SelectPathes;
+
+            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
+
+            if (selectPathes.Any() == false)
+            {
+                PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
+
+                if (firstItem != null)
+                {
+                    this.DataGridWrapperModelExtender.SelectedDataContexts =
+                        new PathInfo[] { firstItem };
+                }
+            }
+
+            this.dataGrid.FocusFirstCell();
+
+            this.dataGrid.CurrentCell =
+                new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+
+            this.dataGrid.ScrollIntoView(
+                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
+                this.dataGrid.Columns.First());
+        }
         /// <summary>
         /// アドレスバーの検索文字列を元にDataGridに表示する内容を検索し絞り込みます。
         /// </summary>
