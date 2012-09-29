@@ -161,8 +161,6 @@ namespace ClassicalFiler
             }
             else if (Keyboard.IsKeyDown(Key.Enter))
             {
-                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPathes.First();
-
                 if (this.IsSearchModeAtAddressBar == true)
                 {
                     this.FilterDataGrid();
@@ -417,11 +415,6 @@ namespace ClassicalFiler
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.V) == true)
                 {
-                    if (selectedPathes.Any() == false)
-                    {
-                        return;
-                    }
-
                     PathPasteContext context = PathClipboard.Context;
 
                     PasteType pasteType = context.Type;
@@ -461,13 +454,6 @@ namespace ClassicalFiler
                 }
                 else if (Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    if (selectedPathes.Any() == false)
-                    {
-                        return;
-                    }
-
-                    PathInfo selectPath = selectedPathes.First();
-
                     PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
                     PathInfo nextDirectory = selectDirectory.ParentDirectory;
 
