@@ -14,12 +14,6 @@ namespace ClassicalFiler
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string InitializeDirectory
-        {
-            get;
-            set;
-        }
-
         public MainWindow(string initializeDirectory = null)
         {
             this.InitializeDirectory = initializeDirectory;
@@ -32,6 +26,14 @@ namespace ClassicalFiler
 
             this.InitializeComponent();
         }
+
+        #region InitializeDirectory プロパティ
+        private string InitializeDirectory
+        {
+            get;
+            set;
+        }
+        #endregion
 
         #region AlphabetDefineString プロパティ
         /// <summary>
@@ -60,18 +62,23 @@ namespace ClassicalFiler
         private string _alphabetDefineString = null;
         #endregion
 
+        #region DataGridWrapperModelExtender プロパティ
         private DataGridWrapperModelExtender<PathInfo> DataGridWrapperModelExtender
         {
             get;
             set;
         }
+        #endregion
 
+        #region DataGridEditExtender プロパティ
         private DataGridEditExtender DataGridEditExtender
         {
             get;
             set;
         }
+        #endregion
 
+        #region DirectoryHistory プロパティ
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
@@ -80,7 +87,9 @@ namespace ClassicalFiler
             get;
             set;
         }
+        #endregion
 
+        #region Window_Initialized 関連イベントハンドラ
         private void Window_Initialized(object sender, EventArgs e)
         {
             this.DataGridWrapperModelExtender = new DataGridWrapperModelExtender<PathInfo>(this.dataGrid);
@@ -95,39 +104,11 @@ namespace ClassicalFiler
             this.dataGrid.FocusFirstCell();
         }
 
-        private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
-        {
-            if (e.EditAction == DataGridEditAction.Cancel)
-            {
-                return;
-            }
-            PathInfo elementPath = this.DataGridWrapperModelExtender.GetDataContext(e.Row);
-
-            if (elementPath == null)
-            {
-                return;
-            }
-
-            TextBox renamedTextBox = e.EditingElement as TextBox;
-
-            PathInfo renamedPath = new PathInfo(Path.Combine(elementPath.ParentDirectory.FullPath, renamedTextBox.Text));
-            if (elementPath.Type == PathInfo.PathType.Directory)
-            {
-                Directory.Move(elementPath.FullPath, renamedPath.FullPath);
-            }
-            else if(elementPath.Type == PathInfo.PathType.File)
-            {
-                File.Move(elementPath.FullPath, renamedPath.FullPath);
-            }
-
-            this.DataGridWrapperModelExtender.SetDataContext(e.Row, renamedPath);
-            this.DataGridEditExtender.EndEdit();
-        }
-
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             this.dataGrid.FocusFirstCell();
         }
+        #endregion
 
         #region AddressBar 関連プロパティ
         /// <summary>
@@ -307,6 +288,34 @@ namespace ClassicalFiler
 
             this.DirectoryHistory.Current.SelectPathes =
                 this.DataGridWrapperModelExtender.SelectedDataContexts;
+        }
+        private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
+        {
+            if (e.EditAction == DataGridEditAction.Cancel)
+            {
+                return;
+            }
+            PathInfo elementPath = this.DataGridWrapperModelExtender.GetDataContext(e.Row);
+
+            if (elementPath == null)
+            {
+                return;
+            }
+
+            TextBox renamedTextBox = e.EditingElement as TextBox;
+
+            PathInfo renamedPath = new PathInfo(Path.Combine(elementPath.ParentDirectory.FullPath, renamedTextBox.Text));
+            if (elementPath.Type == PathInfo.PathType.Directory)
+            {
+                Directory.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+            else if (elementPath.Type == PathInfo.PathType.File)
+            {
+                File.Move(elementPath.FullPath, renamedPath.FullPath);
+            }
+
+            this.DataGridWrapperModelExtender.SetDataContext(e.Row, renamedPath);
+            this.DataGridEditExtender.EndEdit();
         }
         private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
