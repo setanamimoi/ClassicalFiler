@@ -269,13 +269,12 @@ namespace ClassicalFiler
 
             this.FilterDataGrid();
 
+            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
+
             this.DataGridWrapperModelExtender.ItemsSouce =
                 this.DirectoryHistory.Current.Directory.GetChildren();
 
-            this.DataGridWrapperModelExtender.SelectedDataContexts =
-                this.DirectoryHistory.Current.SelectPathes;
-
-            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
+            this.DataGridWrapperModelExtender.SelectedDataContexts = selectPathes;
 
             if (selectPathes.Any() == false)
             {
@@ -302,6 +301,8 @@ namespace ClassicalFiler
         /// </summary>
         private void FilterDataGrid()
         {
+            PathInfo[] selectedPathes = this.DataGridWrapperModelExtender.SelectedDataContexts;
+
             try
             {
                 string searchString = this.SearchStringAtAddressBar;
@@ -324,7 +325,7 @@ namespace ClassicalFiler
             finally
             {
                 this.dataGrid.FocusFirstCell();
-                this.dataGrid.SelectedItem = this.dataGrid.Items.Cast<object>().FirstOrDefault();
+                this.DataGridWrapperModelExtender.SelectedDataContexts = selectedPathes;
             }
         }
         #endregion
