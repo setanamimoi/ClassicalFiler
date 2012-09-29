@@ -126,7 +126,7 @@ namespace ClassicalFiler
             }
             set
             {
-                if (value == null)
+                if (value == null || string.IsNullOrEmpty(value) == true)
                 {
                     this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
                     return;
