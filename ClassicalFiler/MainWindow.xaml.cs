@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -94,37 +93,6 @@ namespace ClassicalFiler
             this.OpenDirectoryAtDataGrid();
 
             this.dataGrid.FocusFirstCell();
-        }
-
-        /// <summary>
-        /// クリップボードの"Preferred DropEffect"を調べる
-        /// </summary>
-        public static DragDropEffects GetPreferredDropEffect(IDataObject data)
-        {
-            DragDropEffects dde = DragDropEffects.None;
-
-            if (data != null)
-            {
-                //Preferred DropEffect形式のデータを取得する
-                System.IO.MemoryStream ms =
-                    (System.IO.MemoryStream)data.GetData("Preferred DropEffect");
-                if (ms != null)
-                {
-                    //先頭のバイトからDragDropEffectsを取得する
-                    dde = (DragDropEffects)ms.ReadByte();
-
-                    if (dde == (DragDropEffects.Copy | DragDropEffects.Link))
-                    {
-                        Console.WriteLine("コピー");
-                    }
-                    else if (dde == DragDropEffects.Move)
-                    {
-                        Console.WriteLine("切り取り");
-                    }
-                }
-            }
-
-            return dde;
         }
 
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
@@ -417,17 +385,8 @@ namespace ClassicalFiler
                         list.Add(pathInfo);
                     }
 
-                    string[] pathInfos = list.Select(path => path.FullPath).ToArray();
-
-                    //コピーするファイルのパスをStringCollectionに追加する
-                    System.Collections.Specialized.StringCollection files =
-                        new System.Collections.Specialized.StringCollection();
-                    foreach (string p in pathInfos)
-                    {
-                        files.Add(p);
-                    }
-                    //クリップボードにコピーする
-                    Clipboard.SetFileDropList(files);
+                    PathClipboard.Copy(list.ToArray());
+                    e.Handled = true;
                     return;
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.X) == true)
@@ -444,18 +403,7 @@ namespace ClassicalFiler
                         list.Add(pathInfo);
                     }
 
-                    string[] pathInfos = list.Select(path => path.FullPath).ToArray();
-
-                    //ファイルドロップ形式のDataObjectを作成する
-                    IDataObject data = new DataObject(DataFormats.FileDrop, pathInfos);
-
-                    //DragDropEffects.Moveを設定する（DragDropEffects.Move は 2）
-                    byte[] bs = new byte[] { (byte)DragDropEffects.Move, 0, 0, 0 };
-                    System.IO.MemoryStream ms = new System.IO.MemoryStream(bs);
-                    data.SetData("Preferred DropEffect", ms);
-
-                    //クリップボードに切り取る
-                    Clipboard.SetDataObject(data);
+                    PathClipboard.Cut(list.ToArray());
                     return;
                 }
                 else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.V) == true)
@@ -465,38 +413,28 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    //クリップボードのデータを取得する
-                    IDataObject data = Clipboard.GetDataObject();
-                    //クリップボードにファイルドロップ形式のデータがあるか確認
-                    if (data != null && data.GetDataPresent(DataFormats.FileDrop))
+                    PathPasteContext context = PathClipboard.Context;
+
+                    PasteType pasteType = context.Type;
+
+                    foreach (PathInfo path in context.Values)
                     {
-                        //コピーされたファイルのリストを取得する
-                        string[] files = (string[])data.GetData(DataFormats.FileDrop);
-                        //DragDropEffectsを取得する
-                        DragDropEffects dde = GetPreferredDropEffect(data);
-
-                        PathInfo[] ps = files.Select(m => new PathInfo(m)).ToArray();
-
-                        //ファイルが切り取られていた時
-                        foreach (PathInfo p in ps)
+                        PathInfo newPath = this.DirectoryHistory.Current.Directory.Combine(path.Name);
+                        if (pasteType == PasteType.Copy)
                         {
-                            PathInfo newPath = this.DirectoryHistory.Current.Directory.Combine(p.Name);
-                            if (dde == DragDropEffects.Move)
-                            {
-                                p.Move(newPath);
-                            }
-                            else
-                            {
-                                p.Copy(newPath);
-                            }
+                            path.Copy(newPath);
+                        }
+                        else
+                        {
+                            path.Move(newPath);
+                        }
 
-                            dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
-                            foreach (dynamic d in dynamicPath)
-                            {
-                                List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
-                                itemlist.Add(d);
-                                this.dataGrid.ItemsSource = itemlist.ToArray();
-                            }
+                        dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
+                        foreach (dynamic d in dynamicPath)
+                        {
+                            List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
+                            itemlist.Add(d);
+                            this.dataGrid.ItemsSource = itemlist.ToArray();
                         }
                     }
                     this.dataGrid.FocusFirstCell();

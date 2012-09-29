@@ -83,6 +83,7 @@
     <Compile Include="DirectorySelectState.cs" />
     <Compile Include="FileSizeConverter.cs" />
     <Compile Include="FileSizeFormatProvider.cs" />
+    <Compile Include="PathClipboard.cs" />
     <Compile Include="PathInfo.cs" />
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -90,6 +91,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PathPasteContext.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
