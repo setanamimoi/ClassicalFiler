@@ -169,34 +169,13 @@ namespace ClassicalFiler
                     return;
                 }
 
-                string inputText = this.addressBar.Text.Trim();
+                PathInfo processPath = new PathInfo(this.addressBar.Text.Trim());
 
-                PathInfo nextPath = new PathInfo(inputText);
+                this.ExecuteDataGridSelectedPathes(processPath);
 
-                if (nextPath == null)
+                if (processPath.Type == PathInfo.PathType.File)
                 {
-                    return;
-                }
-
-                if (nextPath.Type == PathInfo.PathType.UnExists)
-                {
-                    return;
-                }
-
-                DirectorySelectState openDirectory = new DirectorySelectState(nextPath);
-                if (openDirectory.Directory.Type == PathInfo.PathType.File)
-                {
-                    openDirectory.SelectPathes = new PathInfo[] { openDirectory.Directory };
-                    openDirectory.Directory = openDirectory.Directory.ParentDirectory;
-                }
-
-                this.DirectoryHistory.Add(openDirectory);
-
-                this.OpenDirectoryAtDataGrid();
-
-                if (nextPath.Type == PathInfo.PathType.File)
-                {
-                    using (Process.Start(nextPath.FullPath)) { }
+                    this.ExecuteDataGridSelectedPathes(processPath.ParentDirectory);
                 }
                 e.Handled = true;
             }
@@ -242,6 +221,47 @@ namespace ClassicalFiler
             this.dataGrid.ScrollIntoView(
                 this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
                 this.dataGrid.Columns.First());
+        }
+
+        /// <summary>
+        /// 指定したパスを実行します。
+        /// </summary>
+        /// <param name="executePathes">実行するパス</param>
+        private void ExecuteDataGridSelectedPathes(params PathInfo[] executePathes)
+        {
+            PathInfo[] files = executePathes.Where(path => path.Type == PathInfo.PathType.File).ToArray();
+
+            foreach (PathInfo file in files)
+            {
+                using (Process.Start(file.FullPath)) { }
+            }
+
+            PathInfo[] directories = executePathes.Where(path => path.Type == PathInfo.PathType.Directory).ToArray();
+
+            if (directories.Count() == 1)
+            {
+                PathInfo singleDirectory = directories.Single();
+
+                if ((singleDirectory.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                {
+                    MessageBox.Show(
+                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", singleDirectory.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                DirectorySelectState directoryState =
+                    new DirectorySelectState(singleDirectory);
+
+                this.DirectoryHistory.Add(directoryState);
+                this.OpenDirectoryAtDataGrid();
+                return;
+            }
+
+            foreach (PathInfo directory in directories)
+            {
+                Process.Start(System.Windows.Forms.Application.ExecutablePath,
+                    directory.FullPath);
+            }
         }
         /// <summary>
         /// アドレスバーの検索文字列を元にDataGridに表示する内容を検索し絞り込みます。
@@ -478,34 +498,8 @@ namespace ClassicalFiler
                         return;
                     }
 
-                    PathInfo nextPath = selectedPathes.First();
-
-                    if (nextPath == null)
-                    {
-                        return;
-                    }
-
-                    if (nextPath.Type == PathInfo.PathType.File)
-                    {
-                        using (Process.Start(nextPath.FullPath)) { }
-                        return;
-                    }
-                    else if (nextPath.Type == PathInfo.PathType.Directory)
-                    {
-                        if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                        {
-                            MessageBox.Show(
-                                string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
-                        }
-
-                        DirectorySelectState directoryState =
-                            new DirectorySelectState(nextPath);
-
-                        this.DirectoryHistory.Add(directoryState);
-                        this.OpenDirectoryAtDataGrid();
-                        return;
-                    }
+                    this.ExecuteDataGridSelectedPathes(selectedPathes);
+                    return;
                 }
                 else if (e.Key == Key.Back)
                 {
