@@ -40,9 +40,12 @@ namespace ClassicalFiler
             get
             {
                 dynamic wrapItem = this.Source.SelectedItem;
-                T ret = wrapItem.Instance as T;
+                if (wrapItem == null)
+                {
+                    return null;
+                }
 
-                return ret;
+                return wrapItem.Instance as T;
             }
             set
             {
@@ -62,6 +65,50 @@ namespace ClassicalFiler
                 }
 
                 this.Source.SelectedItem = CreateWrapModel(value).FirstOrDefault();
+            }
+        }
+
+        /// <summary>
+        /// 選択中の DataContext のオブジェクト を取得します。
+        /// </summary>
+        public T[] SelectedDataContexts
+        {
+            get
+            {
+                List<T> ret = new List<T>();
+
+                dynamic[] wrapItems = this.Source.SelectedItems.Cast<dynamic>().ToArray() as dynamic[];
+                if (wrapItems == null)
+                {
+                    return ret.ToArray();
+                }
+                foreach (dynamic wrapItem in wrapItems)
+                {
+                    T item = wrapItem.Instance as T;
+                    if (item != null)
+                    {
+                        ret.Add(item);
+                    }
+                }
+
+                return ret.ToArray();
+            }
+            set
+            {
+                if (value == null)
+                {
+                    this.Source.SelectedItems.Clear();
+                    return;
+                }
+                
+                foreach (dynamic wrapItem in this.Source.Items)
+                {
+                    T item = wrapItem.Instance as T;
+                    if (value.Contains(item) == true)
+                    {
+                        this.Source.SelectedItems.Add(wrapItem);
+                    }
+                }
             }
         }
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -15,12 +14,6 @@ namespace ClassicalFiler
     /// </summary>
     public partial class MainWindow : Window
     {
-        private string InitializeDirectory
-        {
-            get;
-            set;
-        }
-
         public MainWindow(string initializeDirectory = null)
         {
             this.InitializeDirectory = initializeDirectory;
@@ -30,22 +23,62 @@ namespace ClassicalFiler
             }
             
             this.DirectoryHistory = new ChainList<DirectorySelectState>();
-            
+
             this.InitializeComponent();
         }
 
+        #region InitializeDirectory プロパティ
+        private string InitializeDirectory
+        {
+            get;
+            set;
+        }
+        #endregion
+
+        #region AlphabetDefineString プロパティ
+        /// <summary>
+        /// アルファベット文字列の定義を取得・設定します。
+        /// </summary>
+        private string AlphabetDefineString
+        {
+            get
+            {
+                if (this._alphabetDefineString == null)
+                {
+                    List<string> alphabetList = new List<string>();
+                    for (int i = 'A'; i <= 'Z'; i++)
+                    {
+                        char c = (char)i;
+
+                        alphabetList.Add(c.ToString());
+                    }
+
+                    this._alphabetDefineString = string.Concat(alphabetList.ToArray());
+                }
+
+                return this._alphabetDefineString;
+            }
+        }
+        private string _alphabetDefineString = null;
+        #endregion
+
+        #region DataGridWrapperModelExtender プロパティ
         private DataGridWrapperModelExtender<PathInfo> DataGridWrapperModelExtender
         {
             get;
             set;
         }
+        #endregion
 
+        #region DataGridEditExtender プロパティ
         private DataGridEditExtender DataGridEditExtender
         {
             get;
             set;
         }
+        #endregion
 
+        #region DirectoryHistory プロパティ
         /// <summary>
         /// ディレクトリの履歴を取得・設定します。
         /// </summary>
@@ -54,7 +87,9 @@ namespace ClassicalFiler
             get;
             set;
         }
+        #endregion
 
+        #region Window_Initialized 関連イベントハンドラ
         private void Window_Initialized(object sender, EventArgs e)
         {
             this.DataGridWrapperModelExtender = new DataGridWrapperModelExtender<PathInfo>(this.dataGrid);
@@ -64,358 +99,214 @@ namespace ClassicalFiler
                 new DirectorySelectState(new PathInfo(this.InitializeDirectory));
 
             this.DirectoryHistory.Add(directoryState);
-            this.OpenDirectory();
+            this.OpenDirectoryAtDataGrid();
+
+            this.dataGrid.FocusFirstCell();
         }
 
-        private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            if (this.DataGridEditExtender.IsEditing == true)
-            {
-                return;
-            }
+            this.dataGrid.FocusFirstCell();
+        }
+        #endregion
 
-            PathInfo selectedItem = this.DataGridWrapperModelExtender.SelectedDataContext;
-            
-            if (selectedItem == null)
+        #region AddressBar 関連プロパティ
+        /// <summary>
+        /// アドレスバーの内容を元に抽出文字列を取得・設定します。
+        /// </summary>
+        private string SearchStringAtAddressBar
+        {
+            get
             {
-                return;
-            }
-
-            //Left キー単独で動作するコマンドが有る為 BrowserBack を先行して評価する
-            if (Keyboard.IsKeyDown(Key.BrowserBack) == true)
-            {
-                this.DirectoryHistory.Current.SelectPath = selectedItem;
-                if (this.DirectoryHistory.MovePrevious() == false)
+                if (this.IsSearchModeAtAddressBar == false)
                 {
+                    return null;
+                }
+                return string.Concat(this.addressBar.Text.Skip(1));
+            }
+            set
+            {
+                if (value == null || string.IsNullOrEmpty(value) == true)
+                {
+                    this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
                     return;
                 }
-                this.OpenDirectory();
-            }
-            else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
-            {
-                this.DirectoryHistory.Current.SelectPath = selectedItem;
-                if (this.DirectoryHistory.MoveNext() == false)
-                {
-                    return;
-                }
-                this.OpenDirectory();
-            }
-            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.L) == true)
-            {
-                this.addressTextBox.Focus();
-            }
-            else if (Keyboard.IsKeyDown(Key.Delete) == true)
-            {
-                if (MessageBox.Show("削除していいですか？", "ClassicalFilter", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
-                {
-                    e.Handled = true;
-                    return;
-                }
-
-                List<object> removeList = new List<object>();
-
-                foreach (dynamic item in this.dataGrid.SelectedItems)
-                {
-                    PathInfo pathItem = item.Instance as PathInfo;
-                    if (pathItem.Type == PathInfo.PathType.Directory)
-                    {
-                        Directory.Delete(pathItem.FullPath, true);
-                    }
-                    else
-                    {
-                        File.Delete(pathItem.FullPath);
-                    }
-
-                    removeList.Add(item);
-                }
-
-                this.dataGrid.ItemsSource = this.DirectoryHistory.Current.Directory.GetChildren();
-                
-                this.dataGrid.Focus();
-            }
-            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.C) == true)
-            {
-                List<PathInfo> list = new List<PathInfo>();
-                foreach (dynamic item in this.dataGrid.SelectedItems)
-                {
-                    PathInfo pathInfo = item.Instance as PathInfo;
-                    list.Add(pathInfo);
-                }
-
-                string[] pathInfos = list.Select(path => path.FullPath).ToArray();
-
-                ////ファイルドロップ形式のDataObjectを作成する
-                //IDataObject data = new DataObject(DataFormats.FileDrop, pathInfos);
-                ////クリップボードにコピーする
-                //Clipboard.SetDataObject(data);
-
-                //コピーするファイルのパスをStringCollectionに追加する
-                System.Collections.Specialized.StringCollection files =
-                    new System.Collections.Specialized.StringCollection();
-                foreach (string p in pathInfos)
-                {
-                    files.Add(p);
-                }
-                //クリップボードにコピーする
-                Clipboard.SetFileDropList(files);
-                e.Handled = true;
-            }
-            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.X) == true)
-            {
-                List<PathInfo> list = new List<PathInfo>();
-                foreach (dynamic item in this.dataGrid.SelectedItems)
-                {
-                    PathInfo pathInfo = item.Instance as PathInfo;
-                    list.Add(pathInfo);
-                }
-
-                string[] pathInfos = list.Select(path => path.FullPath).ToArray();
-
-                //ファイルドロップ形式のDataObjectを作成する
-                IDataObject data = new DataObject(DataFormats.FileDrop, pathInfos);
-
-                //DragDropEffects.Moveを設定する（DragDropEffects.Move は 2）
-                byte[] bs = new byte[] { (byte)DragDropEffects.Move, 0, 0, 0 };
-                System.IO.MemoryStream ms = new System.IO.MemoryStream(bs);
-                data.SetData("Preferred DropEffect", ms);
-
-                //クリップボードに切り取る
-                Clipboard.SetDataObject(data);
-                e.Handled = true;
-            }
-            else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.V) == true)
-            {
-                //クリップボードのデータを取得する
-                IDataObject data = Clipboard.GetDataObject();
-                //クリップボードにファイルドロップ形式のデータがあるか確認
-                if (data != null && data.GetDataPresent(DataFormats.FileDrop))
-                {
-                    //コピーされたファイルのリストを取得する
-                    string[] files = (string[])data.GetData(DataFormats.FileDrop);
-                    //DragDropEffectsを取得する
-                    DragDropEffects dde = GetPreferredDropEffect(data);
-
-                    if (dde == DragDropEffects.Move)
-                    {
-                        //ファイルが切り取られていた時
-                        CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, true);
-                    }
-                    else
-                    {
-                        //ファイルがコピーされていた時
-                        CopyFilesToDirectory(files, this.DirectoryHistory.Current.Directory.FullPath, false);
-                    }
-                }
-                e.Handled = true;
-            }
-            else if (Keyboard.IsKeyDown(Key.F2) == true)
-            {
-                this.DataGridEditExtender.BeginEdit();
-            }
-            else if (Keyboard.IsKeyDown(Key.Left) == true)
-            {
-                PathInfo selectPath = selectedItem;
-
-                PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
-                PathInfo nextDirectory = selectDirectory.ParentDirectory;
-
-                if (nextDirectory == null)
-                {
-                    return;
-                }
-
-                this.DirectoryHistory.Current.SelectPath = selectPath;
-
-                DirectorySelectState directoryState =
-                    new DirectorySelectState(nextDirectory);
-
-                this.DirectoryHistory.Add(directoryState);
-
-                this.DirectoryHistory.Current.SelectPath = selectDirectory;
-                this.OpenDirectory();
-            }
-            else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
-            {
-                PathInfo nextPath = selectedItem;
-
-                if (nextPath == null)
-                {
-                    return;
-                }
-
-                if (nextPath.Type == PathInfo.PathType.File)
-                {
-                    using (Process.Start(nextPath.FullPath)) { }
-                    e.Handled = true;
-                }
-                else if (nextPath.Type == PathInfo.PathType.Directory)
-                {
-                    if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
-                    {
-                        MessageBox.Show(
-                            string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                        e.Handled = true;
-                        return;
-                    }
-
-                    this.DirectoryHistory.Current.SelectPath = selectedItem;
-
-                    DirectorySelectState directoryState =
-                        new DirectorySelectState(nextPath);
-
-                    this.DirectoryHistory.Add(directoryState);
-                    this.OpenDirectory();
-                    e.Handled = true;
-
-                }
+                this.addressBar.Text = ":" + value;
             }
         }
 
         /// <summary>
-        /// クリップボードの"Preferred DropEffect"を調べる
+        /// アドレスバーの内容から検索モード中かどうかを確認します。
         /// </summary>
-        public static DragDropEffects GetPreferredDropEffect(IDataObject data)
+        private bool IsSearchModeAtAddressBar
         {
-            DragDropEffects dde = DragDropEffects.None;
-
-            if (data != null)
+            get
             {
-                //Preferred DropEffect形式のデータを取得する
-                System.IO.MemoryStream ms =
-                    (System.IO.MemoryStream)data.GetData("Preferred DropEffect");
-                if (ms != null)
+                if (this.addressBar.Text.FirstOrDefault() == ':')
                 {
-                    //先頭のバイトからDragDropEffectsを取得する
-                    dde = (DragDropEffects)ms.ReadByte();
-
-                    if (dde == (DragDropEffects.Copy | DragDropEffects.Link))
-                    {
-                        Console.WriteLine("コピー");
-                    }
-                    else if (dde == DragDropEffects.Move)
-                    {
-                        Console.WriteLine("切り取り");
-                    }
+                    return true;
                 }
+
+                return false;
             }
-
-            return dde;
         }
+        #endregion
 
-        /// <summary>
-        /// 複数のファイルを指定したフォルダにコピーまたは移動する
-        /// </summary>
-        public void CopyFilesToDirectory(string[] sourceFiles, string destDir, bool move)
+        #region AddressBar 関連イベントハンドラ
+        private void addressBar_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            foreach (string sourcePath in sourceFiles)
+            if (Keyboard.IsKeyDown(Key.Down))
             {
-                //コピー先のパスを決定する
-                string destName = System.IO.Path.GetFileName(sourcePath);
-                string destPath = System.IO.Path.Combine(destDir, destName);
-                if (!move)
-                {
-                    if (new PathInfo(sourcePath).Type == PathInfo.PathType.Directory)
-                    {
-                        CopyDirectory(sourcePath, destPath);
-                    }
-                    else
-                    {
-                        System.IO.File.Copy(sourcePath, destPath);
-                    }
-                }
-                else
-                {
-                    //ファイルを移動する
-                    if (new PathInfo(sourcePath).Type == PathInfo.PathType.Directory)
-                    {
-                        System.IO.Directory.Move(sourcePath, destPath);
-                    }
-                    else if(new PathInfo(sourcePath).Type == PathInfo.PathType.File)
-                    {
-                        System.IO.File.Move(sourcePath, destPath);
-                    }
-                    
-                }
-                PathInfo newPath = new PathInfo(destPath);
-                dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
-                foreach(dynamic d in dynamicPath)
-                {
-                    List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
-                    itemlist.Add(d);
-                    this.dataGrid.ItemsSource = itemlist.ToArray();
-                }
-                
+                this.dataGrid.FocusFirstCell();
             }
-
-            this.dataGrid.Focus();
-        }
-        /// <summary>
-        /// ディレクトリをコピーする
-        /// </summary>
-        /// <param name="sourceDirName">コピーするディレクトリ</param>
-        /// <param name="destDirName">コピー先のディレクトリ</param>
-        public static void CopyDirectory(
-            string sourceDirName, string destDirName)
-        {
-            //コピー先のディレクトリがないときは作る
-            if (!System.IO.Directory.Exists(destDirName))
+            else if (Keyboard.IsKeyDown(Key.Enter))
             {
-                System.IO.Directory.CreateDirectory(destDirName);
-                //属性もコピー
-                System.IO.File.SetAttributes(destDirName,
-                    System.IO.File.GetAttributes(sourceDirName));
+                if (this.IsSearchModeAtAddressBar == true)
+                {
+                    this.FilterDataGrid();
+
+                    e.Handled = true;
+                    return;
+                }
+
+                PathInfo processPath = new PathInfo(this.addressBar.Text.Trim());
+
+                this.ExecuteDataGridSelectedPathes(processPath);
+
+                if (processPath.Type == PathInfo.PathType.File)
+                {
+                    this.ExecuteDataGridSelectedPathes(processPath.ParentDirectory);
+                }
+                e.Handled = true;
             }
-
-            //コピー先のディレクトリ名の末尾に"\"をつける
-            if (destDirName[destDirName.Length - 1] !=
-                    System.IO.Path.DirectorySeparatorChar)
-                destDirName = destDirName + System.IO.Path.DirectorySeparatorChar;
-
-            //コピー元のディレクトリにあるファイルをコピー
-            string[] files = System.IO.Directory.GetFiles(sourceDirName);
-            foreach (string file in files)
-                System.IO.File.Copy(file,
-                    destDirName + System.IO.Path.GetFileName(file), true);
-
-            //コピー元のディレクトリにあるディレクトリについて、
-            //再帰的に呼び出す
-            string[] dirs = System.IO.Directory.GetDirectories(sourceDirName);
-            foreach (string dir in dirs)
-                CopyDirectory(dir, destDirName + System.IO.Path.GetFileName(dir));
         }
+        #endregion
+
+        #region DataGrid 関連メソッド
         /// <summary>
         /// カレントディレクトリを開き、一番上のパスを選択します。
         /// </summary>
-        private void OpenDirectory()
+        private void OpenDirectoryAtDataGrid()
         {
-            this.addressTextBox.Text = this.DirectoryHistory.Current.Directory.FullPath;
-            this.Title = this.DirectoryHistory.Current.Directory.FullPath + " - ClassicalFiler";
-            PathInfo selectPath = this.DirectoryHistory.Current.SelectPath;
+            this.addressBar.Text = this.DirectoryHistory.Current.Directory.FullPath;
+            this.Title = string.Format("{0} - {1}",
+                this.DirectoryHistory.Current.Directory.FullPath,
+                System.Windows.Forms.Application.ProductName);
 
-            this.DataGridWrapperModelExtender.ItemsSouce = 
+            this.FilterDataGrid();
+
+            PathInfo[] selectPathes = this.DirectoryHistory.Current.SelectPathes;
+
+            this.DataGridWrapperModelExtender.ItemsSouce =
                 this.DirectoryHistory.Current.Directory.GetChildren();
 
-            this.dataGrid.Focus();
+            this.DataGridWrapperModelExtender.SelectedDataContexts = selectPathes;
 
-            PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
-
-            if (firstItem == null)
+            if (selectPathes.Any() == false)
             {
+                PathInfo firstItem = this.DataGridWrapperModelExtender.ItemsSouce.FirstOrDefault();
+
+                if (firstItem != null)
+                {
+                    this.DataGridWrapperModelExtender.SelectedDataContexts =
+                        new PathInfo[] { firstItem };
+                }
+            }
+
+            this.dataGrid.FocusFirstCell();
+
+            this.dataGrid.CurrentCell =
+                new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
+
+            this.dataGrid.ScrollIntoView(
+                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
+                this.dataGrid.Columns.First());
+        }
+
+        /// <summary>
+        /// 指定したパスを実行します。
+        /// </summary>
+        /// <param name="executePathes">実行するパス</param>
+        private void ExecuteDataGridSelectedPathes(params PathInfo[] executePathes)
+        {
+            PathInfo[] files = executePathes.Where(path => path.Type == PathInfo.PathType.File).ToArray();
+
+            foreach (PathInfo file in files)
+            {
+                using (Process.Start(file.FullPath)) { }
+            }
+
+            PathInfo[] directories = executePathes.Where(path => path.Type == PathInfo.PathType.Directory).ToArray();
+
+            if (directories.Count() == 1)
+            {
+                PathInfo singleDirectory = directories.Single();
+
+                if ((singleDirectory.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                {
+                    MessageBox.Show(
+                        string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", singleDirectory.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                DirectorySelectState directoryState =
+                    new DirectorySelectState(singleDirectory);
+
+                this.DirectoryHistory.Add(directoryState);
+                this.OpenDirectoryAtDataGrid();
                 return;
             }
 
-            if (selectPath == null)
+            foreach (PathInfo directory in directories)
             {
-                this.DataGridWrapperModelExtender.SelectedDataContext = firstItem;
+                Process.Start(System.Windows.Forms.Application.ExecutablePath,
+                    directory.FullPath);
             }
-            else
-            {
-                this.DataGridWrapperModelExtender.SelectedDataContext = selectPath;
-            }
-
-            dataGrid.CurrentCell = new DataGridCellInfo(dataGrid.SelectedItem, dataGrid.Columns.First());
         }
+        /// <summary>
+        /// アドレスバーの検索文字列を元にDataGridに表示する内容を検索し絞り込みます。
+        /// </summary>
+        private void FilterDataGrid()
+        {
+            PathInfo[] selectedPathes = this.DataGridWrapperModelExtender.SelectedDataContexts;
 
+            try
+            {
+                string searchString = this.SearchStringAtAddressBar;
+                if (searchString == null)
+                {
+                    this.dataGrid.Items.Filter = item => true;
+                    return;
+                }
+
+                this.dataGrid.Items.Filter =
+                    item =>
+                    {
+                        dynamic wrapModelItem = item as dynamic;
+
+                        string modelName = wrapModelItem.Name as string;
+
+                        return modelName.ToUpper().Contains(searchString.ToUpper());
+                    };
+            }
+            finally
+            {
+                this.dataGrid.FocusFirstCell();
+                this.DataGridWrapperModelExtender.SelectedDataContexts = selectedPathes;
+            }
+        }
+        #endregion
+
+        #region DataGrid 関連イベントハンドラ
+        private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            this.dataGrid.ScrollIntoView(
+                this.dataGrid.SelectedItems.Cast<object>().FirstOrDefault(),
+                this.dataGrid.Columns.First());
+
+            this.DirectoryHistory.Current.SelectPathes =
+                this.DataGridWrapperModelExtender.SelectedDataContexts;
+        }
         private void dataGrid_CellEditEnding(object sender, DataGridCellEditEndingEventArgs e)
         {
             if (e.EditAction == DataGridEditAction.Cancel)
@@ -436,7 +327,7 @@ namespace ClassicalFiler
             {
                 Directory.Move(elementPath.FullPath, renamedPath.FullPath);
             }
-            else if(elementPath.Type == PathInfo.PathType.File)
+            else if (elementPath.Type == PathInfo.PathType.File)
             {
                 File.Move(elementPath.FullPath, renamedPath.FullPath);
             }
@@ -444,62 +335,203 @@ namespace ClassicalFiler
             this.DataGridWrapperModelExtender.SetDataContext(e.Row, renamedPath);
             this.DataGridEditExtender.EndEdit();
         }
-
-        private void addressTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void dataGrid_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (Keyboard.IsKeyDown(Key.Enter))
+            if (this.DataGridEditExtender.IsEditing == true)
             {
-                PathInfo selectedItem = this.DirectoryHistory.Current.SelectPath;
+                return;
+            }
 
-                string inputText = this.addressTextBox.Text.Trim();
-                if (string.IsNullOrEmpty(inputText) == true)
-                {
-                    PathInfo[] pathes = this.DirectoryHistory.Current.Directory.GetChildren();
-                    this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(pathes);
-                    e.Handled = true;
-                    return;
-                }
-                else if (inputText.IndexOf(":") == 0)
-                {
-                    PathInfo[] pathes =  this.DirectoryHistory.Current.Directory.GetChildren();
-                    this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel( pathes.Where(p => Regex.IsMatch(p.Name, inputText.TrimStart(':')) == true).ToArray());
-                    e.Handled = true;
-                    return;
-                }
+            bool isHandled = true;
 
-                PathInfo nextPath = new PathInfo(inputText);
+            try
+            {
+                PathInfo[] selectedPathes = this.DataGridWrapperModelExtender.SelectedDataContexts;
 
-                if (nextPath == null)
+                if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Left) == true)
                 {
-                    return;
-                }
-
-                if (nextPath.Type == PathInfo.PathType.File)
-                {
-                    using (Process.Start(nextPath.FullPath)) { }
-                    e.Handled = true;
-                }
-                else if (nextPath.Type == PathInfo.PathType.Directory)
-                {
-                    if ((nextPath.Attributes & FileAttributes.ReparsePoint) == FileAttributes.ReparsePoint)
+                    if (this.DirectoryHistory.MovePrevious() == false)
                     {
-                        MessageBox.Show(
-                            string.Format("{0}にアクセスできません。{1}{1}アクセスが拒否されました。", nextPath.FullPath, Environment.NewLine), this.Content.ToString(), MessageBoxButton.OK, MessageBoxImage.Error);
-                        e.Handled = true;
+                        return;
+                    }
+                    this.OpenDirectoryAtDataGrid();
+                    return;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Alt) == ModifierKeys.Alt && Keyboard.IsKeyDown(Key.Right) == true)
+                {
+                    if (this.DirectoryHistory.MoveNext() == false)
+                    {
+                        return;
+                    }
+                    this.OpenDirectoryAtDataGrid();
+                    return;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.L) == true)
+                {
+                    this.addressBar.Focus();
+                    return;
+                }
+                else if (Keyboard.IsKeyDown(Key.Delete) == true)
+                {
+                    if (selectedPathes.Any() == false)
+                    {
                         return;
                     }
 
-                    this.DirectoryHistory.Current.SelectPath = selectedItem;
+                    if (MessageBox.Show("削除していいですか？", "ClassicalFilter", MessageBoxButton.YesNo, MessageBoxImage.Information) == MessageBoxResult.No)
+                    {
+                        return;
+                    }
+
+                    List<object> removeList = new List<object>();
+
+                    foreach (dynamic item in this.dataGrid.SelectedItems)
+                    {
+                        PathInfo pathItem = item.Instance as PathInfo;
+                        pathItem.Delete();
+
+                        removeList.Add(item);
+                    }
+
+                    this.dataGrid.ItemsSource = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(this.DirectoryHistory.Current.Directory.GetChildren());
+                    this.dataGrid.SelectedItem = this.dataGrid.Items.Cast<object>().First();
+
+                    this.dataGrid.FocusFirstCell();
+                    return;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.C) == true)
+                {
+                    if (selectedPathes.Any() == false)
+                    {
+                        return;
+                    }
+                    List<PathInfo> list = new List<PathInfo>();
+                    foreach (dynamic item in this.dataGrid.SelectedItems)
+                    {
+                        PathInfo pathInfo = item.Instance as PathInfo;
+                        list.Add(pathInfo);
+                    }
+
+                    PathClipboard.Copy(list.ToArray());
+                    e.Handled = true;
+                    return;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.X) == true)
+                {
+                    if (selectedPathes.Any() == false)
+                    {
+                        return;
+                    }
+
+                    List<PathInfo> list = new List<PathInfo>();
+                    foreach (dynamic item in this.dataGrid.SelectedItems)
+                    {
+                        PathInfo pathInfo = item.Instance as PathInfo;
+                        list.Add(pathInfo);
+                    }
+
+                    PathClipboard.Cut(list.ToArray());
+                    return;
+                }
+                else if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control && Keyboard.IsKeyDown(Key.V) == true)
+                {
+                    PathPasteContext context = PathClipboard.Context;
+
+                    PasteType pasteType = context.Type;
+
+                    foreach (PathInfo path in context.Values)
+                    {
+                        PathInfo newPath = this.DirectoryHistory.Current.Directory.Combine(path.Name);
+                        if (pasteType == PasteType.Copy)
+                        {
+                            path.Copy(newPath);
+                        }
+                        else
+                        {
+                            path.Move(newPath);
+                        }
+
+                        dynamic[] dynamicPath = DataGridWrapperModelExtender<PathInfo>.CreateWrapModel(newPath);
+                        foreach (dynamic d in dynamicPath)
+                        {
+                            List<object> itemlist = this.dataGrid.ItemsSource.Cast<object>().ToList();
+                            itemlist.Add(d);
+                            this.dataGrid.ItemsSource = itemlist.ToArray();
+                        }
+                    }
+                    this.dataGrid.FocusFirstCell();
+                    return;
+                }
+                else if (Keyboard.IsKeyDown(Key.F2) == true)
+                {
+                    if (selectedPathes.Any() == false)
+                    {
+                        return;
+                    }
+
+                    this.DataGridEditExtender.BeginEdit();
+                    return;
+                }
+                else if (Keyboard.IsKeyDown(Key.Left) == true)
+                {
+                    PathInfo selectDirectory = this.DirectoryHistory.Current.Directory;
+                    PathInfo nextDirectory = selectDirectory.ParentDirectory;
+
+                    if (nextDirectory == null)
+                    {
+                        return;
+                    }
 
                     DirectorySelectState directoryState =
-                        new DirectorySelectState(nextPath);
+                        new DirectorySelectState(nextDirectory);
 
                     this.DirectoryHistory.Add(directoryState);
-                    this.OpenDirectory();
-                    e.Handled = true;
 
+                    this.DirectoryHistory.Current.SelectPathes = new PathInfo[] { selectDirectory };
+                    this.OpenDirectoryAtDataGrid();
+                    return;
                 }
+                else if (Keyboard.IsKeyDown(Key.Enter) || Keyboard.IsKeyDown(Key.Right))
+                {
+                    if (selectedPathes.Any() == false)
+                    {
+                        return;
+                    }
+
+                    this.ExecuteDataGridSelectedPathes(selectedPathes);
+                    return;
+                }
+                else if (e.Key == Key.Back)
+                {
+                    if (this.IsSearchModeAtAddressBar == true)
+                    {
+                        this.SearchStringAtAddressBar =
+                            this.SearchStringAtAddressBar.RemoveLast();
+                    }
+                    this.FilterDataGrid();
+                    return;
+                }
+                else if (e.Key == Key.Escape)
+                {
+                    this.SearchStringAtAddressBar = null;
+                    this.FilterDataGrid();
+                    return;
+                }
+                else if (this.AlphabetDefineString.Contains(e.Key.ToString()) == true)
+                {
+                    this.SearchStringAtAddressBar =
+                        this.SearchStringAtAddressBar.Append(e.Key.ToString());
+
+                    this.FilterDataGrid();
+                    return;
+                }
+                isHandled = false;
+            }
+            finally
+            {
+                e.Handled = isHandled;
             }
         }
+        #endregion
     }
 }

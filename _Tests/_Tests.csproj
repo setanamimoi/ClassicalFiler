@@ -57,10 +57,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="_ApplicationExtentions\Append.cs" />
+    <Compile Include="_ApplicationExtentions\RemoveLast.cs" />
     <Compile Include="_ChainList\MovePrevious.cs" />
     <Compile Include="_ChainList\Add.cs" />
     <Compile Include="_ChainList\MoveNext.cs" />
     <Compile Include="_FileSizeFormatProvider\Format.cs" />
+    <Compile Include="_PathInfo\Combine.cs" />
+    <Compile Include="_PathInfo\Copy.cs" />
+    <Compile Include="_PathInfo\Delete.cs" />
     <Compile Include="_PathInfo\Equals.cs" />
     <Compile Include="_PathInfo\GetChildren.cs" />
     <Compile Include="_PathInfo\Extention.cs" />
@@ -68,6 +73,7 @@
     <Compile Include="_PathInfo\Attributes.cs" />
     <Compile Include="_PathInfo\GetHashCode.cs" />
     <Compile Include="_PathInfo\LastWriteTime.cs" />
+    <Compile Include="_PathInfo\Move.cs" />
     <Compile Include="_PathInfo\OperatorEqual.cs" />
     <Compile Include="_PathInfo\ParentDirectory.cs" />
     <Compile Include="_PathInfo\Size.cs" />
